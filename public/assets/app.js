@@ -2,12 +2,7 @@ document.addEventListener('click', (event) => {
   const replyLink = event.target.closest('a[href^="#comment-form-"]');
   if (!replyLink) return;
 
-  const form = document.getElementById(replyLink.hash.slice(1));
-  const input = form?.querySelector('input[name="content"]');
-  if (!input) return;
-
   event.preventDefault();
-  input.focus({ preventScroll: true });
 });
 
 document.addEventListener('submit', async (event) => {
