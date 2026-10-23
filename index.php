@@ -20,6 +20,11 @@ try {
     $notifications = new NotificationModel($db);
     $GLOBALS['notification_model'] = $notifications;
     $page = (string) ($_GET['page'] ?? (current_user() ? 'feed' : 'login'));
+    $activeBan = current_user() ? $users->activeBan((int) current_user()['id']) : null;
+
+    if ($activeBan && !in_array($page, ['account-restricted', 'logout', 'notification-dismiss', 'notification-open'], true)) {
+        redirect(url(['page' => 'account-restricted']));
+    }
 
     switch ($page) {
         case 'login':
@@ -86,7 +91,13 @@ try {
             (new FavoriteController($posts, $comments, $users))->toggle();
             break;
         case 'notifications':
-            (new NotificationController($notifications))->index();
+            (new NotificationController($notifications, $posts))->index();
+            break;
+        case 'notification-dismiss':
+            (new NotificationController($notifications, $posts))->dismiss();
+            break;
+        case 'notification-open':
+            (new NotificationController($notifications, $posts))->open();
             break;
         case 'share-track':
             (new ShareController($posts, $notifications))->track();
@@ -95,10 +106,23 @@ try {
             (new ProfileController($users, $posts))->toggleFollow();
             break;
         case 'admin':
-            (new AdminController($users, $posts))->index();
+            (new AdminController($users, $posts, $notifications))->index();
             break;
         case 'admin-post-delete':
-            (new AdminController($users, $posts))->deletePost();
+            (new AdminController($users, $posts, $notifications))->deletePost();
+            break;
+        case 'admin-user-moderate':
+            (new AdminController($users, $posts, $notifications))->moderateUser();
+            break;
+        case 'account-restricted':
+            $user = require_auth();
+            if (!$activeBan) {
+                redirect(url(['page' => 'feed']));
+            }
+            render('moderation/restricted', [
+                'title' => 'Account suspended',
+                'activeBan' => $activeBan,
+            ]);
             break;
         default:
             http_response_code(404);

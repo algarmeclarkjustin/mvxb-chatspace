@@ -176,7 +176,7 @@ final class PostModel
 
     public function adminRecent(): array
     {
-        $statement = $this->db->prepare('SELECT p.id, p.content, p.created_at, u.username, u.full_name FROM posts p JOIN users u ON u.id = p.user_id ORDER BY p.created_at DESC LIMIT 20');
+        $statement = $this->db->prepare('SELECT p.id, p.content, p.created_at, u.id AS user_id, u.username, u.full_name FROM posts p JOIN users u ON u.id = p.user_id ORDER BY p.created_at DESC');
         $statement->execute();
         return $statement->get_result()->fetch_all(MYSQLI_ASSOC);
     }

@@ -26,13 +26,7 @@
     </div>
     <div class="comments" id="comments-<?= (int) $post['id'] ?>">
         <?php foreach ($post['comments'] as $comment): ?>
-            <?php $rootComment = $comment; ?>
-            <?php $isReply = false; require __DIR__ . '/comment.php'; ?>
-            <div class="comment-replies" data-replies-for="<?= (int) $comment['id'] ?>">
-            <?php foreach ($comment['replies'] as $reply): $comment = $reply; $isReply = true; require __DIR__ . '/comment.php'; endforeach; ?>
-            </div>
-            <?php $comment = $rootComment; ?>
-            <?php if ($viewer): ?><form class="comment-form reply-form" id="reply-form-<?= (int) $post['id'] ?>-<?= (int) $comment['id'] ?>" action="<?= e(url(['page' => 'comment-create'])) ?>" method="post" hidden><?= csrf_field() ?><input type="hidden" name="post_id" value="<?= (int) $post['id'] ?>"><input type="hidden" name="parent_comment_id" value="<?= (int) $comment['id'] ?>"><input name="content" maxlength="500" placeholder="Reply to @<?= e($comment['username']) ?>… Use @username to mention someone" aria-label="Reply to comment" required><button type="submit" aria-label="Send reply"><i class="bi bi-arrow-up-right"></i></button></form><?php endif; ?>
+            <?php render_post_comment($comment, $post, $viewer, (bool) $canModeratePosts); ?>
         <?php endforeach; ?>
         <?php if ($viewer): ?><form class="comment-form" id="comment-form-<?= (int) $post['id'] ?>" action="<?= e(url(['page' => 'comment-create'])) ?>" method="post"><?= csrf_field() ?><input type="hidden" name="post_id" value="<?= (int) $post['id'] ?>"><input type="hidden" name="parent_comment_id" value="0"><input name="content" maxlength="500" placeholder="Write a thoughtful comment… Use @username to mention someone" aria-label="Write a comment" required><button type="submit" aria-label="Send comment"><i class="bi bi-arrow-up-right"></i></button></form><?php endif; ?>
     </div>

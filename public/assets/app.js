@@ -104,8 +104,8 @@ document.addEventListener('click', async (event) => {
 
   const replyButton = event.target.closest('[data-reply-comment]');
   if (!replyButton) return;
-  const post = replyButton.closest('.post');
-  const replyForm = post.querySelector(`#reply-form-${post.id.replace('post-', '')}-${replyButton.dataset.replyComment}`);
+  const commentRow = replyButton.closest('.comment-row');
+  const replyForm = commentRow.querySelector('.reply-form');
   if (!replyForm) return;
   replyForm.hidden = !replyForm.hidden;
   if (!replyForm.hidden) replyForm.querySelector('input[name="content"]').focus();

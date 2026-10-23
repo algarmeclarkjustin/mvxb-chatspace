@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS users (
     bio VARCHAR(240) NOT NULL DEFAULT '',
     profile_image VARCHAR(255) NULL,
     role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+    is_permanently_banned TINYINT(1) NOT NULL DEFAULT 0,
+    banned_until DATETIME NULL,
+    ban_reason VARCHAR(500) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uq_users_username (username),
@@ -31,6 +34,36 @@ SET @role_migration = IF(
 PREPARE ensure_user_role FROM @role_migration;
 EXECUTE ensure_user_role;
 DEALLOCATE PREPARE ensure_user_role;
+
+SET @permanent_ban_exists = (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'is_permanently_banned'
+);
+SET @permanent_ban_migration = IF(@permanent_ban_exists = 0,
+    'ALTER TABLE users ADD COLUMN is_permanently_banned TINYINT(1) NOT NULL DEFAULT 0', 'SELECT 1');
+PREPARE ensure_permanent_ban FROM @permanent_ban_migration;
+EXECUTE ensure_permanent_ban;
+DEALLOCATE PREPARE ensure_permanent_ban;
+
+SET @banned_until_exists = (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'banned_until'
+);
+SET @banned_until_migration = IF(@banned_until_exists = 0,
+    'ALTER TABLE users ADD COLUMN banned_until DATETIME NULL', 'SELECT 1');
+PREPARE ensure_banned_until FROM @banned_until_migration;
+EXECUTE ensure_banned_until;
+DEALLOCATE PREPARE ensure_banned_until;
+
+SET @ban_reason_exists = (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'ban_reason'
+);
+SET @ban_reason_migration = IF(@ban_reason_exists = 0,
+    'ALTER TABLE users ADD COLUMN ban_reason VARCHAR(500) NULL', 'SELECT 1');
+PREPARE ensure_ban_reason FROM @ban_reason_migration;
+EXECUTE ensure_ban_reason;
+DEALLOCATE PREPARE ensure_ban_reason;
 
 CREATE TABLE IF NOT EXISTS posts (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -147,7 +180,8 @@ CREATE TABLE IF NOT EXISTS notifications (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     recipient_id INT UNSIGNED NOT NULL,
     actor_id INT UNSIGNED NOT NULL,
-    type ENUM('mention', 'post_like', 'comment_like', 'comment_reply', 'comment', 'share', 'activity') NOT NULL,
+    type ENUM('mention', 'post_like', 'comment_like', 'comment_reply', 'comment', 'share', 'activity', 'moderation_warning', 'temporary_ban', 'permanent_ban', 'ban_lifted') NOT NULL,
+    message VARCHAR(500) NULL,
     post_id INT UNSIGNED NULL,
     comment_id INT UNSIGNED NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -160,7 +194,19 @@ CREATE TABLE IF NOT EXISTS notifications (
     CONSTRAINT fk_notifications_comment FOREIGN KEY (comment_id) REFERENCES comments (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-ALTER TABLE notifications MODIFY COLUMN type ENUM('mention', 'post_like', 'comment_like', 'comment_reply', 'comment', 'share', 'activity') NOT NULL;
+ALTER TABLE notifications MODIFY COLUMN type ENUM('mention', 'post_like', 'comment_like', 'comment_reply', 'comment', 'share', 'activity', 'moderation_warning', 'temporary_ban', 'permanent_ban', 'ban_lifted') NOT NULL;
+SET @notification_message_column_exists = (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'notifications' AND COLUMN_NAME = 'message'
+);
+SET @notification_message_migration = IF(
+    @notification_message_column_exists = 0,
+    'ALTER TABLE notifications ADD COLUMN message VARCHAR(500) NULL',
+    'SELECT 1'
+);
+PREPARE ensure_notification_message FROM @notification_message_migration;
+EXECUTE ensure_notification_message;
+DEALLOCATE PREPARE ensure_notification_message;
 UPDATE notifications SET type = 'activity' WHERE type = '';
 
 -- Demo accounts use the password: commonplace123

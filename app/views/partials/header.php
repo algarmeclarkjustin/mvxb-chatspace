@@ -54,4 +54,20 @@
 <?php if ($flash): ?>
     <div class="flash flash-<?= e($flash['type']) ?>" role="status"><i class="bi <?= $flash['type'] === 'error' ? 'bi-exclamation-circle' : 'bi-check-circle' ?>"></i><?= e($flash['message']) ?></div>
 <?php endif; ?>
+<?php if ($moderationAlert): ?>
+    <?php
+    $moderationTitle = match ($moderationAlert['type']) {
+        'moderation_warning' => 'A post needs your attention',
+        'temporary_ban' => 'Your account is temporarily suspended',
+        'permanent_ban' => 'Your account has been suspended',
+        'ban_lifted' => 'Your account is available again',
+        default => 'Account notice',
+    };
+    ?>
+    <dialog class="moderation-dialog" open aria-labelledby="moderation-title">
+        <div class="moderation-dialog-card"><span class="moderation-alert-icon"><i class="bi bi-exclamation-triangle"></i></span><h2 id="moderation-title"><?= e($moderationTitle) ?></h2><p><?= e($moderationAlert['message'] ?? '') ?></p>
+            <form action="<?= e(url(['page' => 'notification-dismiss'])) ?>" method="post"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $moderationAlert['id'] ?>"><button class="button button-primary" type="submit">Got it</button></form>
+        </div>
+    </dialog>
+<?php endif; ?>
 <main class="page-shell">

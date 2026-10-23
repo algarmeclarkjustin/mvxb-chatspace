@@ -18,23 +18,20 @@ final class CommentModel
         $statement->execute();
         $rows = $statement->get_result()->fetch_all(MYSQLI_ASSOC);
         $comments = [];
-        $rootIndexes = [];
         foreach ($rows as $row) {
             $row['replies'] = [];
-            if ($row['parent_comment_id'] === null) {
-                $rootIndexes[(int) $row['id']] = count($comments);
-                $comments[] = $row;
+            $comments[(int) $row['id']] = $row;
+        }
+        $tree = [];
+        foreach (array_keys($comments) as $id) {
+            $parentId = (int) ($comments[$id]['parent_comment_id'] ?? 0);
+            if ($parentId > 0 && isset($comments[$parentId])) {
+                $comments[$parentId]['replies'][] = &$comments[$id];
+            } else {
+                $tree[] = &$comments[$id];
             }
         }
-        foreach ($rows as $row) {
-            if ($row['parent_comment_id'] !== null) {
-                $rootId = (int) $row['parent_comment_id'];
-                if (isset($rootIndexes[$rootId])) {
-                    $comments[$rootIndexes[$rootId]]['replies'][] = $row;
-                }
-            }
-        }
-        return $comments;
+        return $tree;
     }
 
     public function create(int $postId, int $userId, string $content, ?int $parentCommentId = null): int
@@ -53,9 +50,9 @@ final class CommentModel
         return $statement->get_result()->fetch_assoc() ?: null;
     }
 
-    public function topLevelCommentForPost(int $commentId, int $postId): ?array
+    public function commentForPost(int $commentId, int $postId): ?array
     {
-        $statement = $this->db->prepare('SELECT id, post_id, user_id FROM comments WHERE id = ? AND post_id = ? AND parent_comment_id IS NULL');
+        $statement = $this->db->prepare('SELECT id, post_id, user_id FROM comments WHERE id = ? AND post_id = ?');
         $statement->bind_param('ii', $commentId, $postId);
         $statement->execute();
         return $statement->get_result()->fetch_assoc() ?: null;

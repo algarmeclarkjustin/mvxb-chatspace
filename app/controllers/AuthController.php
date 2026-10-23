@@ -14,6 +14,17 @@ final class AuthController
             $login = trim((string) ($_POST['login'] ?? ''));
             $user = $this->users->findByLogin($login);
             if ($user && password_verify((string) ($_POST['password'] ?? ''), $user['password'])) {
+                $activeBan = $this->users->activeBan((int) $user['id']);
+                if ($activeBan) {
+                    $message = (bool) $activeBan['is_permanently_banned']
+                        ? 'This account is permanently banned.'
+                        : 'This account is temporarily suspended until ' . date('M j, Y g:i a', strtotime($activeBan['banned_until'])) . '.';
+                    if (!empty($activeBan['ban_reason'])) {
+                        $message .= ' Reason: ' . $activeBan['ban_reason'];
+                    }
+                    render('auth/login', ['title' => 'Account suspended', 'accountNotice' => $message]);
+                    return;
+                }
                 session_regenerate_id(true);
                 unset($user['password'], $user['email']);
                 $_SESSION['user'] = $user;

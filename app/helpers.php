@@ -89,13 +89,20 @@ function render(string $view, array $data = []): void
     $viewer = current_user();
     if ($notifications instanceof NotificationModel && $viewer) {
         $data['unreadNotificationCount'] = $notifications->unreadCount((int) $viewer['id']);
+        $data['moderationAlert'] = $notifications->unreadModerationAlert((int) $viewer['id']);
     } else {
         $data['unreadNotificationCount'] = 0;
+        $data['moderationAlert'] = null;
     }
     extract($data, EXTR_SKIP);
     require __DIR__ . '/views/partials/header.php';
     require __DIR__ . '/views/' . $view . '.php';
     require __DIR__ . '/views/partials/footer.php';
+}
+
+function render_post_comment(array $comment, array $post, ?array $viewer, bool $canModeratePosts, bool $isReply = false): void
+{
+    require __DIR__ . '/views/posts/comment.php';
 }
 
 function upload_image(string $field, string $folder): ?string

@@ -26,6 +26,9 @@ erDiagram
         varchar bio
         varchar profile_image
         enum role
+        boolean is_permanently_banned
+        timestamp banned_until
+        varchar ban_reason
         timestamp created_at
     }
     POSTS {
@@ -73,6 +76,7 @@ erDiagram
         enum type "mention, post_like, comment_like, comment_reply, comment, share, activity"
         int post_id FK
         int comment_id FK
+        varchar message
         timestamp created_at
         timestamp read_at
     }

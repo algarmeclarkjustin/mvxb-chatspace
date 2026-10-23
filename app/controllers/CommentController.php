@@ -24,12 +24,12 @@ final class CommentController
             set_flash('error', 'That post is unavailable.');
             redirect(url(['page' => 'feed']));
         }
-        $parentComment = $parentCommentId > 0 ? $this->comments->topLevelCommentForPost($parentCommentId, $postId) : null;
+        $parentComment = $parentCommentId > 0 ? $this->comments->commentForPost($parentCommentId, $postId) : null;
         if ($parentCommentId > 0 && !$parentComment) {
             http_response_code(422);
             if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {
                 header('Content-Type: application/json; charset=utf-8');
-                echo json_encode(['error' => 'You can only reply to a comment on this post.']);
+                echo json_encode(['error' => 'You can only reply to comments on this post.']);
                 return;
             }
             set_flash('error', 'That comment is unavailable for a reply.');

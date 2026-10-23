@@ -25,7 +25,7 @@ final class UserModel
 
     public function findById(int $id): ?array
     {
-        $statement = $this->db->prepare('SELECT id, username, full_name, bio, profile_image, role, created_at FROM users WHERE id = ?');
+        $statement = $this->db->prepare('SELECT id, username, full_name, bio, profile_image, role, is_permanently_banned, banned_until, ban_reason, created_at FROM users WHERE id = ?');
         $statement->bind_param('i', $id);
         $statement->execute();
         return $statement->get_result()->fetch_assoc() ?: null;
@@ -106,8 +106,35 @@ final class UserModel
 
     public function adminList(): array
     {
-        $statement = $this->db->prepare('SELECT id, username, email, full_name, role, created_at FROM users ORDER BY created_at DESC LIMIT 100');
+        $statement = $this->db->prepare('SELECT id, username, email, full_name, role, is_permanently_banned, banned_until, ban_reason, created_at FROM users ORDER BY created_at DESC');
         $statement->execute();
         return $statement->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function activeBan(int $userId): ?array
+    {
+        $statement = $this->db->prepare('SELECT id, is_permanently_banned, banned_until, ban_reason FROM users WHERE id = ?');
+        $statement->bind_param('i', $userId);
+        $statement->execute();
+        $ban = $statement->get_result()->fetch_assoc();
+        if (!$ban || (!(bool) $ban['is_permanently_banned'] && (empty($ban['banned_until']) || strtotime($ban['banned_until']) <= time()))) {
+            return null;
+        }
+        return $ban;
+    }
+
+    public function setBan(int $userId, bool $permanent, ?string $bannedUntil, string $reason): void
+    {
+        $isPermanent = $permanent ? 1 : 0;
+        $statement = $this->db->prepare('UPDATE users SET is_permanently_banned = ?, banned_until = ?, ban_reason = ? WHERE id = ?');
+        $statement->bind_param('issi', $isPermanent, $bannedUntil, $reason, $userId);
+        $statement->execute();
+    }
+
+    public function clearBan(int $userId): void
+    {
+        $statement = $this->db->prepare('UPDATE users SET is_permanently_banned = 0, banned_until = NULL, ban_reason = NULL WHERE id = ?');
+        $statement->bind_param('i', $userId);
+        $statement->execute();
     }
 }

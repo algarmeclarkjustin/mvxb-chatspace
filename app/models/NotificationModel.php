@@ -46,9 +46,15 @@ final class NotificationModel
         $this->create($recipientId, $actorId, 'share', $postId);
     }
 
+    public function notifyModeration(int $recipientId, int $actorId, string $type, string $message, ?int $postId = null): void
+    {
+        $this->create($recipientId, $actorId, $type, $postId, null, $message);
+    }
+
     public function forUser(int $userId): array
     {
         $statement = $this->db->prepare('SELECT n.*, COALESCE(actor.username, \'unknown\') AS actor_username,
+            actor.full_name AS actor_name, actor.profile_image AS actor_image,
             p.content AS post_content, c.content AS comment_content
             FROM notifications n LEFT JOIN users actor ON actor.id = n.actor_id
             LEFT JOIN posts p ON p.id = n.post_id
@@ -59,12 +65,37 @@ final class NotificationModel
         return $statement->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
+    public function findForUser(int $notificationId, int $userId): ?array
+    {
+        $statement = $this->db->prepare('SELECT id, type, post_id, comment_id FROM notifications WHERE id = ? AND recipient_id = ?');
+        $statement->bind_param('ii', $notificationId, $userId);
+        $statement->execute();
+        return $statement->get_result()->fetch_assoc() ?: null;
+    }
+
     public function unreadCount(int $userId): int
     {
-        $statement = $this->db->prepare('SELECT COUNT(*) AS total FROM notifications WHERE recipient_id = ? AND read_at IS NULL');
+        $statement = $this->db->prepare('SELECT COUNT(*) AS total FROM notifications WHERE recipient_id = ? AND read_at IS NULL AND type <> \'\'');
         $statement->bind_param('i', $userId);
         $statement->execute();
         return (int) $statement->get_result()->fetch_assoc()['total'];
+    }
+
+    public function unreadModerationAlert(int $userId): ?array
+    {
+        $statement = $this->db->prepare('SELECT id, type, message FROM notifications WHERE recipient_id = ? AND read_at IS NULL
+            AND type IN (\'moderation_warning\', \'temporary_ban\', \'permanent_ban\', \'ban_lifted\')
+            ORDER BY created_at DESC LIMIT 1');
+        $statement->bind_param('i', $userId);
+        $statement->execute();
+        return $statement->get_result()->fetch_assoc() ?: null;
+    }
+
+    public function markOneRead(int $userId, int $notificationId): void
+    {
+        $statement = $this->db->prepare('UPDATE notifications SET read_at = CURRENT_TIMESTAMP WHERE id = ? AND recipient_id = ? AND read_at IS NULL');
+        $statement->bind_param('ii', $notificationId, $userId);
+        $statement->execute();
     }
 
     public function markRead(int $userId): void
@@ -74,13 +105,13 @@ final class NotificationModel
         $statement->execute();
     }
 
-    private function create(int $recipientId, int $actorId, string $type, int $postId, ?int $commentId = null): void
+    private function create(int $recipientId, int $actorId, string $type, ?int $postId = null, ?int $commentId = null, ?string $message = null): void
     {
         if ($recipientId === $actorId) {
             return;
         }
-        $statement = $this->db->prepare('INSERT INTO notifications (recipient_id, actor_id, type, post_id, comment_id) VALUES (?, ?, ?, ?, ?)');
-        $statement->bind_param('iisii', $recipientId, $actorId, $type, $postId, $commentId);
+        $statement = $this->db->prepare('INSERT INTO notifications (recipient_id, actor_id, type, post_id, comment_id, message) VALUES (?, ?, ?, ?, ?, ?)');
+        $statement->bind_param('iisiis', $recipientId, $actorId, $type, $postId, $commentId, $message);
         $statement->execute();
     }
 }
