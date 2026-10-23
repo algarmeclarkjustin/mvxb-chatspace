@@ -12,7 +12,7 @@
             </div>
         <?php endif; ?>
     </div>
-    <p class="post-copy"><?= nl2br(e($post['content'])) ?></p>
+    <?php if ($post['content'] !== ''): ?><p class="post-copy"><?= nl2br(e($post['content'])) ?></p><?php endif; ?>
     <?php if (!empty($post['image'])): ?><button class="post-image-trigger" type="button" data-image-viewer-trigger aria-label="View image shared by <?= e($post['full_name']) ?>"><img class="post-image" src="public/uploads/<?= e($post['image']) ?>" alt="Image shared by <?= e($post['full_name']) ?>" loading="lazy"></button><?php endif; ?>
     <div class="post-stats"><span class="like-count" data-like-count><span data-like-total><?= (int) $post['like_count'] ?></span> <span data-like-word><?= (int) $post['like_count'] === 1 ? 'heart' : 'hearts' ?></span></span><a href="#comments-<?= (int) $post['id'] ?>" data-comment-count><span data-comment-total><?= (int) $post['comment_count'] ?></span> <span data-comment-word><?= (int) $post['comment_count'] === 1 ? 'reply' : 'replies' ?></span></a></div>
     <div class="post-actions">

@@ -12,12 +12,16 @@ final class PostController
         $user = require_auth();
         verify_csrf();
         $content = trim((string) ($_POST['content'] ?? ''));
-        if ($content === '' || strlen($content) > 2000) {
-            set_flash('error', 'A post needs text and must be 2,000 characters or fewer.');
+        if (strlen($content) > 2000) {
+            set_flash('error', 'A post must be 2,000 characters or fewer.');
             redirect(url(['page' => 'feed']));
         }
         try {
             $image = upload_image('image', 'posts');
+            if ($content === '' && $image === null) {
+                set_flash('error', 'Add some text or choose a photo before sharing.');
+                redirect(url(['page' => 'feed']));
+            }
             $this->posts->create((int) $user['id'], $content, $image);
             set_flash('success', 'Your post is live.');
         } catch (RuntimeException $exception) {
@@ -46,12 +50,17 @@ final class PostController
             redirect(url(['page' => 'feed']));
         }
         $content = trim((string) ($_POST['content'] ?? ''));
-        if ($content === '' || strlen($content) > 2000) {
-            set_flash('error', 'A post needs text and must be 2,000 characters or fewer.');
+        if (strlen($content) > 2000) {
+            set_flash('error', 'A post must be 2,000 characters or fewer.');
             redirect(url(['page' => 'post-edit', 'id' => $id]));
         }
         try {
-            $this->posts->update($id, $content, upload_image('image', 'posts'));
+            $image = upload_image('image', 'posts');
+            if ($content === '' && $image === null && empty($post['image'])) {
+                set_flash('error', 'Add some text or choose a photo before saving.');
+                redirect(url(['page' => 'post-edit', 'id' => $id]));
+            }
+            $this->posts->update($id, $content, $image);
             set_flash('success', 'Your post has been updated.');
         } catch (RuntimeException $exception) {
             set_flash('error', $exception->getMessage());
