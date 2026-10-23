@@ -10,7 +10,7 @@ function database(): mysqli
     }
 
     $host = getenv('DB_HOST') ?: '127.0.0.1';
-    $database = getenv('DB_NAME') ?: 'social_app';
+    $database = getenv('DB_NAME') ?: 'mvxb_db';
     $username = getenv('DB_USER') ?: 'root';
     $password = getenv('DB_PASS') ?: '';
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);

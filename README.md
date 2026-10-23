@@ -12,10 +12,10 @@ A PHP MVC mini social network for the Web Systems and Technologies final project
 
 1. Place this folder at `C:\xampp\htdocs\mini-social`.
 2. Start Apache and MySQL from the XAMPP Control Panel.
-3. Open phpMyAdmin at `http://localhost/phpmyadmin` and import `sql/social_app.sql`.
+3. In phpMyAdmin, create a database named `mvxb_db`, select it, then import `sql/mvxb_db.sql`. The SQL file does not create or select databases; the active database must be selected before importing. Hosting providers such as InfinityFree require creating databases through their control panel.
 4. Visit `http://localhost/mini-social/`.
 
-The default local database connection is host `127.0.0.1`, database `social_app`, user `root`, and an empty password. Set `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASS` environment variables to override it.
+The default local database connection is host `127.0.0.1`, database `mvxb_db`, user `root`, and an empty password. On InfinityFree, use the MySQL host, database name, username, and password shown in the hosting control panel. Set `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASS` environment variables to override the local defaults.
 
 The SQL file includes demo accounts, posts, comments, and likes. It also creates the follower, favorite, comment-heart, site settings, and notification tables, and safely upgrades post visibility/pinning, reposts, nested replies, moderation status, notification details, and event types in an existing database. Re-import it to upgrade an earlier version without deleting existing data. Each demo account uses the password `commonplace123`.
 
@@ -37,7 +37,7 @@ public/
 uploads/       User-uploaded profile, post, and admin branding images
   index.php      Redirect for the previous public URL
 sql/
-  social_app.sql MySQL schema, upgrade, and sample data
+  mvxb_db.sql     MySQL schema, upgrade, and sample data
   ERD.md         Mermaid entity relationship diagram
 ```
 

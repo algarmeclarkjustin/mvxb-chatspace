@@ -1,6 +1,3 @@
-CREATE DATABASE IF NOT EXISTS social_app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE social_app;
-
 CREATE TABLE IF NOT EXISTS users (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     username VARCHAR(24) NOT NULL,
@@ -269,7 +266,7 @@ CREATE TABLE IF NOT EXISTS site_settings (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT IGNORE INTO site_settings (setting_key, setting_value) VALUES ('site_name', 'MVXB ChatSpace'), ('site_logo', '');
 
--- Demo accounts use the password: commonplace123
+-- Import this file into the selected mvxb_db database. Demo accounts use the password: commonplace123
 INSERT IGNORE INTO users (id, username, email, password, full_name, bio, role) VALUES
 (1, 'maya', 'maya@example.test', '$2y$10$QZ8jb4NWQgyGymle3XFlG.GX9HuNdsglrYRSik5B7i4J1koeW146a', 'Maya Santos', 'Collecting little moments, good books, and new places.', 'user'),
 (2, 'eli', 'eli@example.test', '$2y$10$QZ8jb4NWQgyGymle3XFlG.GX9HuNdsglrYRSik5B7i4J1koeW146a', 'Eli Navarro', 'Usually outside. Always up for a long conversation.', 'user'),
