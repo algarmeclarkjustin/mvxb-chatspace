@@ -24,6 +24,6 @@ final class ShareController
         $this->notifications->notifyShare($share['owner_id'], (int) $user['id'], $share['post_id']);
         header('Content-Type: application/json; charset=utf-8');
         http_response_code(201);
-        echo json_encode(['url' => url(['page' => 'feed']) . '#post-' . $share['post_id']]);
+        echo json_encode(['url' => post_location($share['post_id'], (string) ($_POST['return_profile'] ?? ''))]);
     }
 }

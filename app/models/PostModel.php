@@ -82,11 +82,15 @@ final class PostModel
 
     public function forUser(int $userId, int $viewerId): array
     {
-        $statement = $this->db->prepare('SELECT p.*, original.content AS shared_content, original.image AS shared_image,
+        $statement = $this->db->prepare('SELECT p.*, u.username, u.full_name, u.profile_image,
+            original.content AS shared_content, original.image AS shared_image,
+            original.id AS shared_source_id,
             original_user.username AS shared_username, original_user.full_name AS shared_full_name,
             (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
-            (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS like_count
-            FROM posts p
+            (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS like_count,
+            EXISTS(SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked,
+            EXISTS(SELECT 1 FROM favorites f WHERE f.post_id = p.id AND f.user_id = ?) AS favorited
+            FROM posts p JOIN users u ON u.id = p.user_id
             LEFT JOIN posts original ON original.id = p.shared_post_id
             LEFT JOIN users original_user ON original_user.id = original.user_id
             WHERE p.user_id = ? AND (p.visibility = \'public\' OR p.user_id = ? OR
@@ -98,7 +102,7 @@ final class PostModel
                     (original.visibility = \'followers\' AND EXISTS (
                         SELECT 1 FROM followers sf WHERE sf.follower_id = ? AND sf.followed_id = original.user_id
                     ))))) ORDER BY p.is_pinned DESC, p.created_at DESC');
-        $statement->bind_param('iiiii', $userId, $viewerId, $viewerId, $viewerId, $viewerId);
+        $statement->bind_param('iiiiiii', $viewerId, $viewerId, $userId, $viewerId, $viewerId, $viewerId, $viewerId);
         $statement->execute();
         return $statement->get_result()->fetch_all(MYSQLI_ASSOC);
     }

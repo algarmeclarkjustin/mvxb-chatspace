@@ -31,6 +31,7 @@ document.addEventListener('click', async (event) => {
       const data = new FormData();
       data.set('post_id', shareButton.dataset.sharePost);
       data.set('csrf_token', shareButton.dataset.csrfToken);
+      data.set('return_profile', shareButton.dataset.returnProfile || '');
       const response = await fetch(shareButton.dataset.shareAction, {
         method: 'POST',
         body: data,

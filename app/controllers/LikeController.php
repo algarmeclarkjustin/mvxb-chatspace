@@ -33,6 +33,6 @@ final class LikeController
             return;
         }
 
-        redirect(url(['page' => 'feed']) . ($postId > 0 ? '#post-' . $postId : ''));
+        redirect(post_location($postId, (string) ($_POST['return_profile'] ?? '')));
     }
 }

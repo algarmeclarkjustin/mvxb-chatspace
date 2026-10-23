@@ -36,6 +36,9 @@ final class FavoriteController
         }
         $favorited = $this->posts->toggleFavorite($postId, (int) $user['id']);
         set_flash('success', $favorited ? 'Post added to your favorites.' : 'Post removed from your favorites.');
-        redirect((string) ($_POST['return_to'] ?? '') === 'favorites' ? url(['page' => 'favorites']) : url(['page' => 'feed']) . '#post-' . $postId);
+        if ((string) ($_POST['return_to'] ?? '') === 'favorites') {
+            redirect(url(['page' => 'favorites']) . '#post-' . $postId);
+        }
+        redirect(post_location($postId, (string) ($_POST['return_profile'] ?? '')));
     }
 }

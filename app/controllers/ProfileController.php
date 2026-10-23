@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 final class ProfileController
 {
-    public function __construct(private UserModel $users, private PostModel $posts, private NotificationModel $notifications)
+    public function __construct(private UserModel $users, private PostModel $posts, private CommentModel $comments, private NotificationModel $notifications)
     {
     }
 
@@ -19,10 +19,15 @@ final class ProfileController
         }
         $viewerId = (int) ($viewer['id'] ?? 0);
         $isOwner = $viewerId > 0 && $viewerId === (int) $profile['id'];
+        $posts = $this->posts->forUser((int) $profile['id'], $viewerId);
+        foreach ($posts as &$post) {
+            $post['comments'] = $this->comments->forPost((int) $post['id'], $viewerId);
+        }
+        unset($post);
         render('profile/show', [
             'title' => $profile['full_name'],
             'profile' => $profile,
-            'posts' => $this->posts->forUser((int) $profile['id'], $viewerId),
+            'posts' => $posts,
             'isOwner' => $isOwner,
             'isFollowing' => $viewerId > 0 && $this->users->isFollowing($viewerId, (int) $profile['id']),
             'followerCount' => $this->users->followerCount((int) $profile['id']),

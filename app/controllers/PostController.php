@@ -42,7 +42,13 @@ final class PostController
         if (!$post) {
             redirect(url(['page' => 'feed']));
         }
-        render('posts/edit', ['title' => 'Edit post', 'post' => $post]);
+        render('posts/edit', [
+            'title' => 'Edit post',
+            'post' => $post,
+            'returnProfile' => preg_match('/^[A-Za-z0-9_]{3,24}$/', (string) ($_GET['return_profile'] ?? ''))
+                ? (string) $_GET['return_profile']
+                : '',
+        ]);
     }
 
     public function update(): void
@@ -52,7 +58,7 @@ final class PostController
         $id = (int) ($_POST['id'] ?? 0);
         $post = $this->ownedPost($id, (int) $user['id']);
         if (!$post) {
-            redirect(url(['page' => 'feed']));
+            redirect(post_location($id, (string) ($_POST['return_profile'] ?? '')));
         }
         $content = trim((string) ($_POST['content'] ?? ''));
         $visibility = (string) ($_POST['visibility'] ?? ($post['visibility'] ?? 'public'));
@@ -61,22 +67,22 @@ final class PostController
         }
         if (strlen($content) > 2000) {
             set_flash('error', 'A post must be 2,000 characters or fewer.');
-            redirect(url(['page' => 'post-edit', 'id' => $id]));
+            redirect(url(['page' => 'post-edit', 'id' => $id, 'return_profile' => (string) ($_POST['return_profile'] ?? '')]));
         }
         try {
             $image = upload_image('image', 'posts');
             if ($content === '' && $image === null && empty($post['image'])) {
                 set_flash('error', 'Add some text or choose a photo before saving.');
-                redirect(url(['page' => 'post-edit', 'id' => $id]));
+                redirect(url(['page' => 'post-edit', 'id' => $id, 'return_profile' => (string) ($_POST['return_profile'] ?? '')]));
             }
             $this->posts->update($id, $content, $image, $visibility);
             $this->notifications->notifyMentions($content, (int) $user['id'], $id);
             set_flash('success', 'Your post has been updated.');
         } catch (RuntimeException $exception) {
             set_flash('error', $exception->getMessage());
-            redirect(url(['page' => 'post-edit', 'id' => $id]));
+            redirect(url(['page' => 'post-edit', 'id' => $id, 'return_profile' => (string) ($_POST['return_profile'] ?? '')]));
         }
-        redirect(url(['page' => 'feed']));
+        redirect(post_location((int) ($post['id'] ?? 0), (string) ($_POST['return_profile'] ?? '')));
     }
 
     public function delete(): void
@@ -91,7 +97,7 @@ final class PostController
         } else {
             set_flash('error', 'You can only delete your own posts.');
         }
-        redirect(url(['page' => 'feed']));
+        redirect(post_location((int) ($post['id'] ?? 0), (string) ($_POST['return_profile'] ?? '')));
     }
 
     public function togglePin(): void
@@ -102,12 +108,12 @@ final class PostController
         $post = $this->posts->find($id);
         if (!$post || (int) $post['user_id'] !== (int) $user['id']) {
             set_flash('error', 'You can only pin your own posts.');
-            redirect(url(['page' => 'profile', 'username' => $user['username']]));
+            redirect(post_location($id, (string) ($_POST['return_profile'] ?? $user['username'])));
         }
         $wasPinned = (bool) $post['is_pinned'];
         $this->posts->togglePin($id, (int) $user['id']);
         set_flash('success', $wasPinned ? 'Post unpinned from your profile.' : 'Post pinned to your profile.');
-        redirect(url(['page' => 'profile', 'username' => $user['username']]));
+        redirect(post_location($id, (string) ($_POST['return_profile'] ?? $user['username'])));
     }
 
     private function ownedPost(int $id, int $userId): ?array

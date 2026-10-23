@@ -19,6 +19,22 @@ function url(array $parameters = []): string
     return 'index.php' . ($parameters ? '?' . http_build_query($parameters) : '');
 }
 
+function post_location(int $postId, ?string $profileUsername = null, ?int $commentId = null): string
+{
+    $page = 'feed';
+    $parameters = [];
+    if (is_string($profileUsername) && preg_match('/^[A-Za-z0-9_]{3,24}$/', $profileUsername)) {
+        $page = 'profile';
+        $parameters['username'] = $profileUsername;
+    }
+    $parameters['page'] = $page;
+    $location = url($parameters) . '#post-' . $postId;
+    if ($commentId !== null && $commentId > 0) {
+        $location = url($parameters) . '#comment-' . $commentId;
+    }
+    return $location;
+}
+
 function redirect(string $location): never
 {
     header('Location: ' . $location);

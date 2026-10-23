@@ -45,13 +45,13 @@ try {
             (new FeedController($posts, $comments, $users))->showPost();
             break;
         case 'profile':
-            (new ProfileController($users, $posts, $notifications))->show();
+            (new ProfileController($users, $posts, $comments, $notifications))->show();
             break;
         case 'profile-edit':
-            (new ProfileController($users, $posts, $notifications))->edit();
+            (new ProfileController($users, $posts, $comments, $notifications))->edit();
             break;
         case 'profile-update':
-            (new ProfileController($users, $posts, $notifications))->update();
+            (new ProfileController($users, $posts, $comments, $notifications))->update();
             break;
         case 'post-create':
             (new PostController($posts, $notifications))->create();
@@ -108,7 +108,7 @@ try {
             (new ShareController($posts, $notifications))->track();
             break;
         case 'follow-toggle':
-            (new ProfileController($users, $posts, $notifications))->toggleFollow();
+            (new ProfileController($users, $posts, $comments, $notifications))->toggleFollow();
             break;
         case 'admin':
             (new AdminController($users, $posts, $notifications, $siteSettings))->index();

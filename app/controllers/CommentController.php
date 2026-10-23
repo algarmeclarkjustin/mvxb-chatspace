@@ -22,7 +22,7 @@ final class CommentController
                 return;
             }
             set_flash('error', 'That post is unavailable.');
-            redirect(url(['page' => 'feed']));
+            redirect(post_location($postId, (string) ($_POST['return_profile'] ?? '')));
         }
         $parentComment = $parentCommentId > 0 ? $this->comments->commentForPost($parentCommentId, $postId) : null;
         if ($parentCommentId > 0 && !$parentComment) {
@@ -33,7 +33,7 @@ final class CommentController
                 return;
             }
             set_flash('error', 'That comment is unavailable for a reply.');
-            redirect(url(['page' => 'feed']) . '#post-' . $postId);
+            redirect(post_location($postId, (string) ($_POST['return_profile'] ?? '')));
         }
         if ($content === '' || strlen($content) > 500) {
             if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {
@@ -71,7 +71,7 @@ final class CommentController
                 return;
             }
         }
-        redirect(url(['page' => 'feed']) . ($postId > 0 ? '#comment-form-' . $postId : ''));
+        redirect(post_location($postId, (string) ($_POST['return_profile'] ?? '')));
     }
 
     public function update(): void
@@ -88,7 +88,7 @@ final class CommentController
             $this->comments->update($id, $content);
             $this->notifications->notifyMentions($content, (int) $user['id'], $postId, $id);
         }
-        redirect(url(['page' => 'feed']) . ($postId > 0 ? '#post-' . $postId : ''));
+        redirect(post_location($postId, (string) ($_POST['return_profile'] ?? '')));
     }
 
     public function delete(): void
@@ -105,7 +105,7 @@ final class CommentController
         } else {
             set_flash('error', 'You can only delete your own comments.');
         }
-        redirect(url(['page' => 'feed']) . ($postId > 0 ? '#post-' . $postId : ''));
+        redirect(post_location($postId, (string) ($_POST['return_profile'] ?? '')));
     }
 
     public function toggleLike(): void
@@ -123,7 +123,7 @@ final class CommentController
                 return;
             }
             set_flash('error', 'That comment is unavailable.');
-            redirect(url(['page' => 'feed']));
+            redirect(post_location($postId, (string) ($_POST['return_profile'] ?? '')));
         }
         $liked = $this->comments->toggleLike($commentId, (int) $user['id']);
         if ($liked) {
@@ -135,7 +135,7 @@ final class CommentController
             echo json_encode($state);
             return;
         }
-        redirect(url(['page' => 'feed']) . '#post-' . $postId);
+        redirect(post_location($postId, (string) ($_POST['return_profile'] ?? '')));
     }
 
     private function ownedComment(int $id, int $userId): ?array
