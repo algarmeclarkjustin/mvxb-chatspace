@@ -20,8 +20,10 @@ final class ShareController
             return;
         }
 
-        $this->notifications->notifyShare((int) $post['user_id'], (int) $user['id'], $postId);
+        $share = $this->posts->createShare((int) $user['id'], $postId);
+        $this->notifications->notifyShare($share['owner_id'], (int) $user['id'], $share['post_id']);
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['url' => url(['page' => 'feed']) . '#post-' . $postId]);
+        http_response_code(201);
+        echo json_encode(['url' => url(['page' => 'feed']) . '#post-' . $share['post_id']]);
     }
 }

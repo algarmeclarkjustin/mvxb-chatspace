@@ -3,6 +3,7 @@
 ```mermaid
 erDiagram
     USERS ||--o{ POSTS : writes
+    POSTS o|--o{ POSTS : reshared
     USERS ||--o{ COMMENTS : adds
     POSTS ||--o{ COMMENTS : receives
     COMMENTS o|--o{ COMMENTS : replies
@@ -16,6 +17,10 @@ erDiagram
     COMMENTS ||--o{ COMMENT_LIKES : receives
     USERS ||--o{ NOTIFICATIONS : receives
     USERS ||--o{ NOTIFICATIONS : triggers
+    SITE_SETTINGS {
+        varchar setting_key PK
+        varchar setting_value
+    }
 
     USERS {
         int id PK
@@ -38,6 +43,7 @@ erDiagram
         varchar image
         enum visibility
         boolean is_pinned
+        int shared_post_id FK
         timestamp created_at
     }
     COMMENTS {
@@ -73,7 +79,7 @@ erDiagram
         int id PK
         int recipient_id FK
         int actor_id FK
-        enum type "mention, post_like, comment_like, comment_reply, comment, share, activity"
+        enum type "mention, post_like, comment_like, comment_reply, comment, share, follow, activity, moderation events"
         int post_id FK
         int comment_id FK
         varchar message

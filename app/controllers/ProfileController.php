@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 final class ProfileController
 {
-    public function __construct(private UserModel $users, private PostModel $posts)
+    public function __construct(private UserModel $users, private PostModel $posts, private NotificationModel $notifications)
     {
     }
 
@@ -39,6 +39,9 @@ final class ProfileController
             redirect(url(['page' => 'feed']));
         }
         $following = $this->users->toggleFollow((int) $user['id'], (int) $profile['id']);
+        if ($following) {
+            $this->notifications->notifyFollow((int) $profile['id'], (int) $user['id']);
+        }
         set_flash('success', $following ? 'You are now following @' . $profile['username'] . '.' : 'You unfollowed @' . $profile['username'] . '.');
         redirect(url(['page' => 'profile', 'username' => $profile['username']]));
     }

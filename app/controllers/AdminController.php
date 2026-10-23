@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 final class AdminController
 {
-    public function __construct(private UserModel $users, private PostModel $posts, private NotificationModel $notifications)
+    public function __construct(private UserModel $users, private PostModel $posts, private NotificationModel $notifications, private SiteSettingsModel $siteSettings)
     {
     }
 
@@ -16,7 +16,28 @@ final class AdminController
             'postCount' => $this->posts->countAll(),
             'users' => $this->users->adminList(),
             'posts' => $this->posts->adminRecent(),
+            'siteSettings' => $this->siteSettings->all(),
         ]);
+    }
+
+    public function updateBranding(): void
+    {
+        require_admin();
+        verify_csrf();
+        $siteName = trim((string) ($_POST['site_name'] ?? ''));
+        if ($siteName === '' || strlen($siteName) > 80) {
+            set_flash('error', 'Enter a site name using 1 to 80 characters.');
+            redirect(url(['page' => 'admin']));
+        }
+
+        try {
+            $logo = upload_image('site_logo', 'branding');
+            $this->siteSettings->saveBranding($siteName, $logo);
+            set_flash('success', 'Site name and logo settings have been updated.');
+        } catch (RuntimeException $exception) {
+            set_flash('error', $exception->getMessage());
+        }
+        redirect(url(['page' => 'admin']));
     }
 
     public function deletePost(): void
@@ -82,12 +103,21 @@ final class AdminController
         if (!$permanent) {
             $duration = filter_var($_POST['duration'] ?? null, FILTER_VALIDATE_INT);
             $unit = (string) ($_POST['duration_unit'] ?? '');
-            $intervals = ['days' => 'D', 'weeks' => 'W', 'months' => 'M', 'years' => 'Y'];
+            $intervals = [
+                'seconds' => ['PT', 'S'],
+                'minutes' => ['PT', 'M'],
+                'hours' => ['PT', 'H'],
+                'days' => ['P', 'D'],
+                'weeks' => ['P', 'W'],
+                'months' => ['P', 'M'],
+                'years' => ['P', 'Y'],
+            ];
             if ($duration === false || $duration < 1 || $duration > 100 || !isset($intervals[$unit])) {
-                set_flash('error', 'Choose a ban duration from 1 to 100 days, weeks, months, or years.');
+                set_flash('error', 'Choose a ban duration from 1 to 100 seconds, minutes, hours, days, weeks, months, or years.');
                 redirect(url(['page' => 'admin']));
             }
-            $expiry = (new DateTimeImmutable())->add(new DateInterval('P' . $duration . $intervals[$unit]));
+            [$period, $interval] = $intervals[$unit];
+            $expiry = (new DateTimeImmutable())->add(new DateInterval($period . $duration . $interval));
             $bannedUntil = $expiry->format('Y-m-d H:i:s');
         }
 

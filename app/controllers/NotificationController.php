@@ -54,7 +54,7 @@ final class NotificationController
             if (!$this->posts->canView($postId, (int) $user['id'])) {
                 redirect(url(['page' => 'notifications']));
             }
-            redirect(url(['page' => 'feed']) . ($commentId > 0 ? '#comment-' . $commentId : '#post-' . $postId));
+            redirect(url(['page' => 'post', 'id' => $postId]) . ($commentId > 0 ? '#comment-' . $commentId : '#post-' . $postId));
         }
         redirect(url(['page' => 'notifications']));
     }

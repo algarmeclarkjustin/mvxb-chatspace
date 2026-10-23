@@ -1,4 +1,4 @@
-<?php $flash = take_flash(); $viewer = current_user(); $currentPage = (string) ($_GET['page'] ?? ($viewer ? 'feed' : 'login')); ?>
+<?php $flash = take_flash(); $viewer = current_user(); $currentPage = (string) ($_GET['page'] ?? ($viewer ? 'feed' : 'login')); $siteSettings = $GLOBALS['site_settings'] ?? ['site_name' => 'MVXB ChatSpace', 'site_logo' => '']; $siteName = $siteSettings['site_name'] ?? 'MVXB ChatSpace'; $siteLogo = $siteSettings['site_logo'] ?? ''; ?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -15,8 +15,8 @@
             console.warn('Theme preference could not be loaded.', error);
         }
     </script>
-    <title><?= e($title ?? 'MVXB ChatSpace') ?> · MVXB ChatSpace</title>
-    <link rel="icon" type="image/jpeg" href="files/MVXB%20Logo.jpg">
+    <title><?= e($title ?? $siteName) ?> · <?= e($siteName) ?></title>
+    <?php if ($siteLogo !== ''): ?><link rel="icon" href="public/uploads/<?= e($siteLogo) ?>"><?php endif; ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
@@ -25,9 +25,9 @@
 </head>
 <body class="<?= in_array($currentPage, ['login', 'register'], true) ? 'auth-body' : '' ?>">
 <header class="topbar">
-    <a class="brand" href="<?= e(url(['page' => $viewer ? 'feed' : 'login'])) ?>" aria-label="MVXB ChatSpace home">
-        <span class="brand-mark" aria-hidden="true"><img src="files/MVXB%20Logo.jpg" alt=""></span>
-        <span>MVXB ChatSpace</span>
+    <a class="brand" href="<?= e(url(['page' => $viewer ? 'feed' : 'login'])) ?>" aria-label="<?= e($siteName) ?> home">
+        <span class="brand-mark" aria-hidden="true"><?php if ($siteLogo !== ''): ?><img src="public/uploads/<?= e($siteLogo) ?>" alt=""><?php else: ?><i class="bi bi-chat-heart-fill"></i><?php endif; ?></span>
+        <span><?= e($siteName) ?></span>
     </a>
     <?php if ($viewer): ?>
         <form class="top-search" action="index.php" method="get">

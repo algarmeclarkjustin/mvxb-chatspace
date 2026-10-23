@@ -33,7 +33,8 @@ foreach ($notifications as $notification) {
                         'comment' => 'commented on your post',
                         'comment_reply' => 'replied to your comment',
                         'share' => 'shared your post',
-                        'activity' => 'interacted with your post',
+                        'follow' => 'started following you',
+                        'activity' => !empty($notification['comment_id']) ? 'interacted with your comment' : 'interacted with your post',
                         'moderation_warning' => 'sent you a community warning',
                         'temporary_ban' => 'temporarily suspended your account',
                         'permanent_ban' => 'permanently suspended your account',
@@ -41,15 +42,19 @@ foreach ($notifications as $notification) {
                         default => 'interacted with you',
                     };
                     $isCommentActivity = in_array($notification['type'], ['comment', 'comment_like', 'comment_reply'], true)
-                        || ($notification['type'] === 'mention' && $notification['comment_id']);
+                        || (!empty($notification['comment_id']) && in_array($notification['type'], ['mention', 'activity'], true));
                     $excerpt = str_starts_with($notification['type'], 'moderation_') || str_ends_with($notification['type'], '_ban') || $notification['type'] === 'ban_lifted'
                         ? $notification['message']
                         : ($isCommentActivity ? $notification['comment_content'] : $notification['post_content']);
+                    if (($excerpt === null || trim((string) $excerpt) === '') && !in_array($notification['type'], ['follow'], true)) {
+                        $excerpt = 'The original post or comment is no longer available.';
+                    }
                     $icon = match ($notification['type']) {
                         'mention' => 'bi-at',
                         'post_like', 'comment_like' => 'bi-heart-fill',
                         'comment', 'comment_reply' => 'bi-chat-left-text-fill',
                         'share' => 'bi-share-fill',
+                        'follow' => 'bi-person-plus-fill',
                         'moderation_warning', 'temporary_ban', 'permanent_ban' => 'bi-shield-exclamation',
                         'ban_lifted' => 'bi-shield-check',
                         default => 'bi-bell-fill',

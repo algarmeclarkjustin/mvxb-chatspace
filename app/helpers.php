@@ -85,11 +85,11 @@ function verify_csrf(): void
 
 function render(string $view, array $data = []): void
 {
-    $notifications = $GLOBALS['notification_model'] ?? null;
+    $notificationModel = $GLOBALS['notification_model'] ?? null;
     $viewer = current_user();
-    if ($notifications instanceof NotificationModel && $viewer) {
-        $data['unreadNotificationCount'] = $notifications->unreadCount((int) $viewer['id']);
-        $data['moderationAlert'] = $notifications->unreadModerationAlert((int) $viewer['id']);
+    if ($notificationModel instanceof NotificationModel && $viewer) {
+        $data['unreadNotificationCount'] = $notificationModel->unreadCount((int) $viewer['id']);
+        $data['moderationAlert'] = $notificationModel->unreadModerationAlert((int) $viewer['id']);
     } else {
         $data['unreadNotificationCount'] = 0;
         $data['moderationAlert'] = null;

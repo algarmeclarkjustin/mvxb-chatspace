@@ -70,6 +70,7 @@ final class PostController
                 redirect(url(['page' => 'post-edit', 'id' => $id]));
             }
             $this->posts->update($id, $content, $image, $visibility);
+            $this->notifications->notifyMentions($content, (int) $user['id'], $id);
             set_flash('success', 'Your post has been updated.');
         } catch (RuntimeException $exception) {
             set_flash('error', $exception->getMessage());

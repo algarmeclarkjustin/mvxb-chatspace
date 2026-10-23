@@ -18,7 +18,9 @@ try {
     $comments = new CommentModel($db);
     $likes = new LikeModel($db);
     $notifications = new NotificationModel($db);
+    $siteSettings = new SiteSettingsModel($db);
     $GLOBALS['notification_model'] = $notifications;
+    $GLOBALS['site_settings'] = $siteSettings->all();
     $page = (string) ($_GET['page'] ?? (current_user() ? 'feed' : 'login'));
     $activeBan = current_user() ? $users->activeBan((int) current_user()['id']) : null;
 
@@ -39,14 +41,17 @@ try {
         case 'feed':
             (new FeedController($posts, $comments, $users))->index();
             break;
+        case 'post':
+            (new FeedController($posts, $comments, $users))->showPost();
+            break;
         case 'profile':
-            (new ProfileController($users, $posts))->show();
+            (new ProfileController($users, $posts, $notifications))->show();
             break;
         case 'profile-edit':
-            (new ProfileController($users, $posts))->edit();
+            (new ProfileController($users, $posts, $notifications))->edit();
             break;
         case 'profile-update':
-            (new ProfileController($users, $posts))->update();
+            (new ProfileController($users, $posts, $notifications))->update();
             break;
         case 'post-create':
             (new PostController($posts, $notifications))->create();
@@ -103,16 +108,19 @@ try {
             (new ShareController($posts, $notifications))->track();
             break;
         case 'follow-toggle':
-            (new ProfileController($users, $posts))->toggleFollow();
+            (new ProfileController($users, $posts, $notifications))->toggleFollow();
             break;
         case 'admin':
-            (new AdminController($users, $posts, $notifications))->index();
+            (new AdminController($users, $posts, $notifications, $siteSettings))->index();
+            break;
+        case 'admin-branding':
+            (new AdminController($users, $posts, $notifications, $siteSettings))->updateBranding();
             break;
         case 'admin-post-delete':
-            (new AdminController($users, $posts, $notifications))->deletePost();
+            (new AdminController($users, $posts, $notifications, $siteSettings))->deletePost();
             break;
         case 'admin-user-moderate':
-            (new AdminController($users, $posts, $notifications))->moderateUser();
+            (new AdminController($users, $posts, $notifications, $siteSettings))->moderateUser();
             break;
         case 'account-restricted':
             $user = require_auth();

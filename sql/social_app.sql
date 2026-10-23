@@ -72,11 +72,14 @@ CREATE TABLE IF NOT EXISTS posts (
     image VARCHAR(255) NULL,
     visibility ENUM('public', 'followers', 'private') NOT NULL DEFAULT 'public',
     is_pinned TINYINT(1) NOT NULL DEFAULT 0,
+    shared_post_id INT UNSIGNED NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     KEY idx_posts_created_at (created_at),
     KEY idx_posts_user_id (user_id),
-    CONSTRAINT fk_posts_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    KEY idx_posts_shared_post (shared_post_id),
+    CONSTRAINT fk_posts_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_posts_shared_post FOREIGN KEY (shared_post_id) REFERENCES posts (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET @visibility_column_exists = (
@@ -104,6 +107,32 @@ SET @pinned_migration = IF(
 PREPARE ensure_post_pinned FROM @pinned_migration;
 EXECUTE ensure_post_pinned;
 DEALLOCATE PREPARE ensure_post_pinned;
+
+SET @shared_post_column_exists = (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'posts' AND COLUMN_NAME = 'shared_post_id'
+);
+SET @shared_post_migration = IF(
+    @shared_post_column_exists = 0,
+    'ALTER TABLE posts ADD COLUMN shared_post_id INT UNSIGNED NULL, ADD KEY idx_posts_shared_post (shared_post_id)',
+    'SELECT 1'
+);
+PREPARE ensure_shared_post FROM @shared_post_migration;
+EXECUTE ensure_shared_post;
+DEALLOCATE PREPARE ensure_shared_post;
+
+SET @shared_post_fk_exists = (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'posts' AND CONSTRAINT_NAME = 'fk_posts_shared_post'
+);
+SET @shared_post_fk_migration = IF(
+    @shared_post_fk_exists = 0,
+    'ALTER TABLE posts ADD CONSTRAINT fk_posts_shared_post FOREIGN KEY (shared_post_id) REFERENCES posts (id) ON DELETE CASCADE',
+    'SELECT 1'
+);
+PREPARE ensure_shared_post_fk FROM @shared_post_fk_migration;
+EXECUTE ensure_shared_post_fk;
+DEALLOCATE PREPARE ensure_shared_post_fk;
 
 CREATE TABLE IF NOT EXISTS comments (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -180,7 +209,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     recipient_id INT UNSIGNED NOT NULL,
     actor_id INT UNSIGNED NOT NULL,
-    type ENUM('mention', 'post_like', 'comment_like', 'comment_reply', 'comment', 'share', 'activity', 'moderation_warning', 'temporary_ban', 'permanent_ban', 'ban_lifted') NOT NULL,
+    type ENUM('mention', 'post_like', 'comment_like', 'comment_reply', 'comment', 'share', 'follow', 'activity', 'moderation_warning', 'temporary_ban', 'permanent_ban', 'ban_lifted') NOT NULL,
     message VARCHAR(500) NULL,
     post_id INT UNSIGNED NULL,
     comment_id INT UNSIGNED NULL,
@@ -190,11 +219,35 @@ CREATE TABLE IF NOT EXISTS notifications (
     KEY idx_notifications_recipient (recipient_id, created_at),
     CONSTRAINT fk_notifications_recipient FOREIGN KEY (recipient_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT fk_notifications_actor FOREIGN KEY (actor_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT fk_notifications_post FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE,
-    CONSTRAINT fk_notifications_comment FOREIGN KEY (comment_id) REFERENCES comments (id) ON DELETE CASCADE
+    CONSTRAINT fk_notifications_post_preserve FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE SET NULL,
+    CONSTRAINT fk_notifications_comment_preserve FOREIGN KEY (comment_id) REFERENCES comments (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-ALTER TABLE notifications MODIFY COLUMN type ENUM('mention', 'post_like', 'comment_like', 'comment_reply', 'comment', 'share', 'activity', 'moderation_warning', 'temporary_ban', 'permanent_ban', 'ban_lifted') NOT NULL;
+ALTER TABLE notifications MODIFY COLUMN type ENUM('mention', 'post_like', 'comment_like', 'comment_reply', 'comment', 'share', 'follow', 'activity', 'moderation_warning', 'temporary_ban', 'permanent_ban', 'ban_lifted') NOT NULL;
+SET @notification_post_delete_rule = (
+    SELECT DELETE_RULE FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
+    WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'notifications' AND CONSTRAINT_NAME = 'fk_notifications_post'
+);
+SET @notification_post_fk_migration = IF(
+    @notification_post_delete_rule = 'CASCADE',
+    'ALTER TABLE notifications DROP FOREIGN KEY fk_notifications_post, DROP INDEX fk_notifications_post, ADD CONSTRAINT fk_notifications_post_preserve FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE SET NULL',
+    'SELECT 1'
+);
+PREPARE ensure_notification_post_fk FROM @notification_post_fk_migration;
+EXECUTE ensure_notification_post_fk;
+DEALLOCATE PREPARE ensure_notification_post_fk;
+SET @notification_comment_delete_rule = (
+    SELECT DELETE_RULE FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
+    WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'notifications' AND CONSTRAINT_NAME = 'fk_notifications_comment'
+);
+SET @notification_comment_fk_migration = IF(
+    @notification_comment_delete_rule = 'CASCADE',
+    'ALTER TABLE notifications DROP FOREIGN KEY fk_notifications_comment, DROP INDEX fk_notifications_comment, ADD CONSTRAINT fk_notifications_comment_preserve FOREIGN KEY (comment_id) REFERENCES comments (id) ON DELETE SET NULL',
+    'SELECT 1'
+);
+PREPARE ensure_notification_comment_fk FROM @notification_comment_fk_migration;
+EXECUTE ensure_notification_comment_fk;
+DEALLOCATE PREPARE ensure_notification_comment_fk;
 SET @notification_message_column_exists = (
     SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'notifications' AND COLUMN_NAME = 'message'
@@ -208,6 +261,13 @@ PREPARE ensure_notification_message FROM @notification_message_migration;
 EXECUTE ensure_notification_message;
 DEALLOCATE PREPARE ensure_notification_message;
 UPDATE notifications SET type = 'activity' WHERE type = '';
+
+CREATE TABLE IF NOT EXISTS site_settings (
+    setting_key VARCHAR(64) NOT NULL,
+    setting_value VARCHAR(255) NOT NULL,
+    PRIMARY KEY (setting_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT IGNORE INTO site_settings (setting_key, setting_value) VALUES ('site_name', 'MVXB ChatSpace'), ('site_logo', '');
 
 -- Demo accounts use the password: commonplace123
 INSERT IGNORE INTO users (id, username, email, password, full_name, bio, role) VALUES

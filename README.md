@@ -1,6 +1,6 @@
 # Mini Social
 
-A PHP MVC mini social network for the Web Systems and Technologies final project. It includes session authentication, profiles, a chronological feed, nested comment conversations and comment hearts, post favorites, mentions and activity notifications, follower-only/private/public post visibility, pinned profile posts, sharing, post/user search, and administrator warnings and temporary/permanent account bans.
+A PHP MVC mini social network for the Web Systems and Technologies final project. It includes session authentication, profiles, a chronological feed, in-app reposts, nested comment conversations and comment hearts, post favorites, mentions and activity notifications, follower-only/private/public post visibility, pinned profile posts, post/user search, administrator-managed site branding, warnings, and temporary/permanent account bans.
 
 ## Requirements
 
@@ -17,7 +17,7 @@ A PHP MVC mini social network for the Web Systems and Technologies final project
 
 The default local database connection is host `127.0.0.1`, database `social_app`, user `root`, and an empty password. Set `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASS` environment variables to override it.
 
-The SQL file includes three demo accounts, posts, comments, and likes. It also creates the follower, favorite, comment-heart, and notification tables, and safely upgrades post visibility/pinning, nested replies, moderation status, notification details, and event types in an existing database. Re-import it to upgrade an earlier version without deleting existing data. Each demo account uses the password `commonplace123`.
+The SQL file includes demo accounts, posts, comments, and likes. It also creates the follower, favorite, comment-heart, site settings, and notification tables, and safely upgrades post visibility/pinning, reposts, nested replies, moderation status, notification details, and event types in an existing database. Re-import it to upgrade an earlier version without deleting existing data. Each demo account uses the password `commonplace123`.
 
 The administrator uses username `admin` and password `MiniAdmin2026!`. The single SQL file also adds the admin role to an existing `users` table without deleting its data.
 
@@ -34,7 +34,7 @@ config/
 index.php        Root front controller
 public/
   assets/        Responsive CSS
-  uploads/       User-uploaded profile and post images
+uploads/       User-uploaded profile, post, and admin branding images
   index.php      Redirect for the previous public URL
 sql/
   social_app.sql MySQL schema, upgrade, and sample data

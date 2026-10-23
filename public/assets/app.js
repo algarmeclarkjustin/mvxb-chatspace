@@ -27,10 +27,7 @@ document.addEventListener('click', async (event) => {
   if (shareButton) {
     if (shareButton.dataset.pending === 'true') return;
     shareButton.dataset.pending = 'true';
-    const shareUrl = new URL('index.php', window.location.href);
-    shareUrl.searchParams.set('page', 'feed');
-    shareUrl.hash = `post-${shareButton.dataset.sharePost}`;
-    const recordShare = async () => {
+    try {
       const data = new FormData();
       data.set('post_id', shareButton.dataset.sharePost);
       data.set('csrf_token', shareButton.dataset.csrfToken);
@@ -40,36 +37,16 @@ document.addEventListener('click', async (event) => {
         credentials: 'same-origin',
         headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       });
-      if (!response.ok) throw new Error('Share notification could not be recorded.');
-    };
-    let shared = false;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: 'MVXB ChatSpace post', text: 'Take a look at this post.', url: shareUrl.href });
-        shared = true;
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(shareUrl.href);
-        shared = true;
-        const label = shareButton.querySelector('span');
-        label.textContent = 'Copied!';
-        window.setTimeout(() => { label.textContent = 'Share'; }, 1800);
-      } else {
-        shared = window.prompt('Copy this post link:', shareUrl.href) !== null;
+      const result = await response.json();
+      if (!response.ok || !result.url) {
+        throw new Error(result.error || 'The post could not be shared.');
       }
+      window.location.assign(result.url);
     } catch (error) {
-      if (error.name !== 'AbortError') {
-        console.error('Post could not be shared.', error);
-        window.alert('The post could not be shared right now. Please try again.');
-      }
+      console.error('Post could not be shared.', error);
+      window.alert(error.message || 'The post could not be shared right now. Please try again.');
+      delete shareButton.dataset.pending;
     }
-    if (shared) {
-      try {
-        await recordShare();
-      } catch (error) {
-        console.error('Post share notification could not be recorded.', error);
-      }
-    }
-    delete shareButton.dataset.pending;
     return;
   }
 

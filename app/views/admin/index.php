@@ -1,6 +1,6 @@
 <section class="admin-page">
     <div class="section-heading">
-        <div><span class="eyebrow">MVXB ChatSpace</span>
+        <div><span class="eyebrow"><?= e($siteSettings['site_name']) ?></span>
             <h1>Admin dashboard</h1>
         </div><span class="admin-badge"><i class="bi bi-shield-check"></i> Administrator</span>
     </div>
@@ -8,6 +8,18 @@
         <article class="admin-stat"><span>Registered members</span><strong><?= (int) $userCount ?></strong><i class="bi bi-people"></i></article>
         <article class="admin-stat"><span>Community posts</span><strong><?= (int) $postCount ?></strong><i class="bi bi-chat-square-text"></i></article>
     </div>
+    <section class="admin-section branding-section">
+        <div class="admin-section-heading">
+            <div><span class="eyebrow">Site identity</span><h2>Logo and name</h2></div>
+        </div>
+        <form class="branding-form" action="<?= e(url(['page' => 'admin-branding'])) ?>" method="post" enctype="multipart/form-data">
+            <?= csrf_field() ?>
+            <?php if (!empty($siteSettings['site_logo'])): ?><img class="branding-preview" src="public/uploads/<?= e($siteSettings['site_logo']) ?>" alt="Current site logo"><?php else: ?><span class="branding-preview branding-placeholder"><i class="bi bi-chat-heart-fill"></i></span><?php endif; ?>
+            <label>Website name<input type="text" name="site_name" maxlength="80" value="<?= e($siteSettings['site_name']) ?>" required></label>
+            <label>Upload logo<input type="file" name="site_logo" accept="image/jpeg,image/png,image/webp,image/gif"></label>
+            <button class="button button-primary" type="submit">Save branding</button>
+        </form>
+    </section>
     <section class="admin-section">
         <div class="admin-section-heading">
             <div><span class="eyebrow">Community</span>
@@ -39,7 +51,7 @@
                                     <details class="admin-moderation"><summary>Moderate</summary>
                                         <form action="<?= e(url(['page' => 'admin-user-moderate'])) ?>" method="post"><?= csrf_field() ?><input type="hidden" name="user_id" value="<?= (int) $member['id'] ?>">
                                             <label>Action<select name="action"><option value="warning">Send warning</option><option value="temporary">Temporary ban</option><option value="permanent">Permanent ban</option></select></label>
-                                            <div class="admin-ban-duration"><label>Length<input type="number" name="duration" min="1" max="100" value="7"></label><label>Unit<select name="duration_unit"><option value="days">Days</option><option value="weeks">Weeks</option><option value="months">Months</option><option value="years">Years</option></select></label></div>
+                                            <div class="admin-ban-duration"><label>Length<input type="number" name="duration" min="1" max="100" value="7"></label><label>Unit<select name="duration_unit"><option value="seconds">Seconds</option><option value="minutes">Minutes</option><option value="hours">Hours</option><option value="days">Days</option><option value="weeks">Weeks</option><option value="months">Months</option><option value="years">Years</option></select></label></div>
                                             <label>Reason<textarea name="reason" maxlength="350" required placeholder="Explain the moderation action"></textarea></label>
                                             <button class="admin-delete" type="submit">Apply action</button>
                                         </form>
@@ -61,7 +73,7 @@
         <div class="admin-post-list">
             <?php foreach ($posts as $post): ?><article class="admin-post">
                     <div class="admin-post-copy"><strong><?= e($post['full_name']) ?> <span>@<?= e($post['username']) ?></span></strong>
-                        <p><?= nl2br(e($post['content'])) ?></p><small><?= e(date('M j, Y · g:i a', strtotime($post['created_at']))) ?></small>
+                        <?php if (!empty($post['shared_post_id'])): ?><p><i class="bi bi-repeat"></i> Shared from @<?= e($post['shared_username']) ?>: <?= nl2br(e($post['shared_content'])) ?></p><?php else: ?><p><?= nl2br(e($post['content'])) ?></p><?php endif; ?><small><?= e(date('M j, Y · g:i a', strtotime($post['created_at']))) ?></small>
                     </div>
                     <div class="admin-post-actions">
                         <details class="admin-moderation"><summary>Warn author</summary>

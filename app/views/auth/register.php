@@ -1,6 +1,6 @@
 <section class="auth-layout">
     <div class="auth-panel">
-        <div class="auth-heading"><span class="eyebrow">Create account</span><h2>Join MVXB ChatSpace</h2><p>Enter your details to get started.</p></div>
+        <div class="auth-heading"><span class="eyebrow">Create account</span><h2>Join <?= e($siteName) ?></h2><p>Enter your details to get started.</p></div>
         <form class="form-stack" action="<?= e(url(['page' => 'register'])) ?>" method="post">
             <?= csrf_field() ?>
             <label>Your name<input name="full_name" type="text" maxlength="80" autocomplete="name" required></label>

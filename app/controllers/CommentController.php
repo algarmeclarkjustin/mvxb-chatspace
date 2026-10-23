@@ -47,11 +47,10 @@ final class CommentController
             $commentId = $this->comments->create($postId, (int) $user['id'], $content, $parentCommentId > 0 ? $parentCommentId : null);
             if ($parentComment) {
                 $this->notifications->notifyCommentReply((int) $parentComment['user_id'], (int) $user['id'], $postId, $commentId);
-            } else {
-                $post = $this->posts->find($postId);
-                if ($post) {
-                    $this->notifications->notifyPostComment((int) $post['user_id'], (int) $user['id'], $postId, $commentId);
-                }
+            }
+            $post = $this->posts->find($postId);
+            if ($post && (!$parentComment || (int) $parentComment['user_id'] !== (int) $post['user_id'])) {
+                $this->notifications->notifyPostComment((int) $post['user_id'], (int) $user['id'], $postId, $commentId);
             }
             $this->notifications->notifyMentions($content, (int) $user['id'], $postId, $commentId);
             if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {
@@ -87,6 +86,7 @@ final class CommentController
             set_flash('error', 'That comment is unavailable.');
         } elseif ($comment && $content !== '' && strlen($content) <= 500) {
             $this->comments->update($id, $content);
+            $this->notifications->notifyMentions($content, (int) $user['id'], $postId, $id);
         }
         redirect(url(['page' => 'feed']) . ($postId > 0 ? '#post-' . $postId : ''));
     }

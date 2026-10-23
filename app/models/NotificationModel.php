@@ -46,6 +46,11 @@ final class NotificationModel
         $this->create($recipientId, $actorId, 'share', $postId);
     }
 
+    public function notifyFollow(int $recipientId, int $actorId): void
+    {
+        $this->create($recipientId, $actorId, 'follow');
+    }
+
     public function notifyModeration(int $recipientId, int $actorId, string $type, string $message, ?int $postId = null): void
     {
         $this->create($recipientId, $actorId, $type, $postId, null, $message);
@@ -53,13 +58,15 @@ final class NotificationModel
 
     public function forUser(int $userId): array
     {
-        $statement = $this->db->prepare('SELECT n.*, COALESCE(actor.username, \'unknown\') AS actor_username,
+        $statement = $this->db->prepare('SELECT n.*, COALESCE(actor.username, \'former member\') AS actor_username,
             actor.full_name AS actor_name, actor.profile_image AS actor_image,
-            p.content AS post_content, c.content AS comment_content
+            COALESCE(NULLIF(p.content, \'\'), shared.content) AS post_content, c.content AS comment_content
             FROM notifications n LEFT JOIN users actor ON actor.id = n.actor_id
             LEFT JOIN posts p ON p.id = n.post_id
+            LEFT JOIN posts shared ON shared.id = p.shared_post_id
             LEFT JOIN comments c ON c.id = n.comment_id
-            WHERE n.recipient_id = ? ORDER BY n.created_at DESC LIMIT 100');
+            WHERE n.recipient_id = ? AND n.type <> \'\'
+            ORDER BY n.created_at DESC');
         $statement->bind_param('i', $userId);
         $statement->execute();
         return $statement->get_result()->fetch_all(MYSQLI_ASSOC);
