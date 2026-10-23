@@ -314,6 +314,7 @@ kbd {
   margin: 0;
 }
 .icon-link {
+  position: relative;
   display: inline-grid;
   place-items: center;
   width: 36px;
@@ -325,6 +326,21 @@ kbd {
   color: #63716a;
   font-size: 18px;
   cursor: pointer;
+}
+.notification-link .notification-badge {
+  position: absolute;
+  top: -3px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+  background: #dc3545;
+  color: #fff;
+  font: 700 10px/1 var(--sans);
 }
 .icon-link:hover {
   background: var(--soft);
@@ -1840,5 +1856,187 @@ body:not(.auth-body) {
   }
   .comment-edit {
     flex-wrap: wrap;
+  }
+}
+
+body {
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(201, 232, 213, 0.24), transparent 32%),
+    radial-gradient(ellipse at 92% 22%, rgba(244, 219, 205, 0.18), transparent 28%),
+    var(--paper);
+}
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(53, 102, 72, 0.18), transparent 32%),
+    radial-gradient(ellipse at 92% 22%, rgba(121, 69, 52, 0.1), transparent 28%),
+    var(--paper);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+.composer-bottom {
+  flex-wrap: wrap;
+}
+.visibility-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.visibility-select select {
+  max-width: 140px;
+  padding: 7px 9px;
+  border: 1px solid var(--control-border);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+.post-head-end {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.visibility-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.visibility-label i {
+  color: var(--green);
+}
+.post-actions .favorite-form {
+  margin-left: auto;
+}
+.post-action.is-favorited {
+  color: var(--coral);
+}
+.mention {
+  color: var(--green);
+  font-weight: 600;
+}
+.mention:hover {
+  text-decoration: underline;
+}
+.comment-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+.comment-like-form,
+.comment-admin-delete {
+  display: inline-flex;
+  margin: 0;
+}
+.comment-like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  cursor: pointer;
+}
+.comment-like-button:hover,
+.comment-like-button.is-liked {
+  color: var(--coral);
+}
+.profile-follow-form {
+  margin: 0;
+}
+.pinned-post {
+  padding-left: 15px;
+  border-left: 3px solid var(--coral);
+  background: linear-gradient(90deg, rgba(223, 116, 95, 0.06), transparent 65%);
+}
+.profile-post-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+.notification-list {
+  border-top: 1px solid var(--line);
+}
+.notification-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px 10px;
+  border-bottom: 1px solid var(--line);
+  transition: background 0.15s ease;
+}
+.notification-row:hover {
+  background: var(--soft);
+}
+.notification-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--rose);
+  color: var(--coral);
+}
+.notification-copy {
+  min-width: 0;
+  flex: 1;
+  color: var(--muted);
+  font-size: 13px;
+}
+.notification-copy strong {
+  color: var(--ink);
+}
+.notification-copy small {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.notification-row time {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 10px;
+}
+@media (max-width: 720px) {
+  .post-head-end .visibility-label {
+    display: none;
+  }
+  .profile-follow-form {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .notification-row {
+    align-items: flex-start;
+    gap: 9px;
+    padding: 13px 4px;
+  }
+  .notification-icon {
+    width: 32px;
+    height: 32px;
+  }
+  .notification-row time {
+    max-width: 62px;
+    text-align: right;
+  }
+  .visibility-select select {
+    max-width: 112px;
   }
 }

@@ -23,6 +23,34 @@ if (themeToggle) {
 }
 
 document.addEventListener('click', (event) => {
+  const shareButton = event.target.closest('[data-share-post]');
+  if (shareButton) {
+    const shareUrl = new URL('index.php', window.location.href);
+    shareUrl.searchParams.set('page', 'feed');
+    shareUrl.hash = `post-${shareButton.dataset.sharePost}`;
+    const title = 'MVXB ChatSpace post';
+    const text = 'Take a look at this post.';
+    if (navigator.share) {
+      navigator.share({ title, text, url: shareUrl.href }).catch((error) => {
+        if (error.name !== 'AbortError') console.error('Post could not be shared.', error);
+      });
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl.href)
+        .then(() => {
+          const label = shareButton.querySelector('span');
+          label.textContent = 'Copied!';
+          window.setTimeout(() => { label.textContent = 'Share'; }, 1800);
+        })
+        .catch((error) => {
+          console.error('Share link could not be copied.', error);
+          window.prompt('Copy this post link:', shareUrl.href);
+        });
+    } else {
+      window.prompt('Copy this post link:', shareUrl.href);
+    }
+    return;
+  }
+
   const imageTrigger = event.target.closest('[data-image-viewer-trigger]');
   if (imageTrigger) {
     const image = imageTrigger.querySelector('img');
@@ -170,6 +198,33 @@ document.addEventListener('submit', async (event) => {
     } finally {
       delete commentForm.dataset.pending;
       submitButton.disabled = false;
+    }
+    return;
+  }
+
+  const commentLikeForm = event.target.closest('form.comment-like-form');
+  if (commentLikeForm) {
+    event.preventDefault();
+    if (commentLikeForm.dataset.pending === 'true') return;
+    commentLikeForm.dataset.pending = 'true';
+    const button = commentLikeForm.querySelector('button');
+    try {
+      const response = await fetch(commentLikeForm.action, {
+        method: 'POST',
+        body: new FormData(commentLikeForm),
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      });
+      if (!response.ok) throw new Error('Comment reaction failed');
+      const state = await response.json();
+      button.classList.toggle('is-liked', state.liked);
+      button.setAttribute('aria-pressed', String(state.liked));
+      button.querySelector('i').className = `bi ${state.liked ? 'bi-heart-fill' : 'bi-heart'}`;
+      button.querySelector('[data-comment-like-count]').textContent = state.count;
+    } catch {
+      commentLikeForm.submit();
+    } finally {
+      delete commentLikeForm.dataset.pending;
     }
     return;
   }

@@ -9,6 +9,7 @@ final class ProfileController
 
     public function show(): void
     {
+        $viewer = current_user();
         $username = (string) ($_GET['username'] ?? '');
         $profile = $this->users->findByUsername($username);
         if (!$profile) {
@@ -16,7 +17,30 @@ final class ProfileController
             render('errors/not_found', ['title' => 'Profile not found']);
             return;
         }
-        render('profile/show', ['title' => $profile['full_name'], 'profile' => $profile, 'posts' => $this->posts->forUser((int) $profile['id']), 'isOwner' => current_user() && (int) current_user()['id'] === (int) $profile['id']]);
+        $viewerId = (int) ($viewer['id'] ?? 0);
+        $isOwner = $viewerId > 0 && $viewerId === (int) $profile['id'];
+        render('profile/show', [
+            'title' => $profile['full_name'],
+            'profile' => $profile,
+            'posts' => $this->posts->forUser((int) $profile['id'], $viewerId),
+            'isOwner' => $isOwner,
+            'isFollowing' => $viewerId > 0 && $this->users->isFollowing($viewerId, (int) $profile['id']),
+            'followerCount' => $this->users->followerCount((int) $profile['id']),
+        ]);
+    }
+
+    public function toggleFollow(): void
+    {
+        $user = require_auth();
+        verify_csrf();
+        $profile = $this->users->findByUsername((string) ($_POST['username'] ?? ''));
+        if (!$profile || (int) $profile['id'] === (int) $user['id']) {
+            set_flash('error', 'That profile is unavailable.');
+            redirect(url(['page' => 'feed']));
+        }
+        $following = $this->users->toggleFollow((int) $user['id'], (int) $profile['id']);
+        set_flash('success', $following ? 'You are now following @' . $profile['username'] . '.' : 'You unfollowed @' . $profile['username'] . '.');
+        redirect(url(['page' => 'profile', 'username' => $profile['username']]));
     }
 
     public function edit(): void

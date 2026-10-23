@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 final class CommentController
 {
-    public function __construct(private CommentModel $comments)
+    public function __construct(private CommentModel $comments, private PostModel $posts, private NotificationModel $notifications)
     {
     }
 
@@ -12,7 +12,28 @@ final class CommentController
         $user = require_auth();
         verify_csrf();
         $postId = (int) ($_POST['post_id'] ?? 0);
+        $parentCommentId = (int) ($_POST['parent_comment_id'] ?? 0);
         $content = trim((string) ($_POST['content'] ?? ''));
+        if (!$this->posts->canView($postId, (int) $user['id'])) {
+            http_response_code(404);
+            if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['error' => 'Post not found.']);
+                return;
+            }
+            set_flash('error', 'That post is unavailable.');
+            redirect(url(['page' => 'feed']));
+        }
+        if ($parentCommentId > 0 && !$this->comments->topLevelCommentForPost($parentCommentId, $postId)) {
+            http_response_code(422);
+            if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['error' => 'You can only reply to a comment on this post.']);
+                return;
+            }
+            set_flash('error', 'That comment is unavailable for a reply.');
+            redirect(url(['page' => 'feed']) . '#post-' . $postId);
+        }
         if ($content === '' || strlen($content) > 500) {
             if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {
                 http_response_code(422);
@@ -22,7 +43,8 @@ final class CommentController
             }
             set_flash('error', 'Comments must contain 1-500 characters.');
         } else {
-            $commentId = $this->comments->create($postId, (int) $user['id'], $content);
+            $commentId = $this->comments->create($postId, (int) $user['id'], $content, $parentCommentId > 0 ? $parentCommentId : null);
+            $this->notifications->notifyMentions($content, (int) $user['id'], $postId, $commentId);
             if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {
                 $comment = $this->comments->findWithAuthor($commentId);
                 if (!$comment) {
@@ -36,6 +58,7 @@ final class CommentController
                     'username' => $comment['username'],
                     'created_at' => date('M j', strtotime($comment['created_at'])),
                     'profile_url' => url(['page' => 'profile', 'username' => $comment['username']]),
+                    'parent_comment_id' => $parentCommentId > 0 ? $parentCommentId : null,
                 ]);
                 return;
             }
@@ -51,7 +74,9 @@ final class CommentController
         $comment = $this->ownedComment($id, (int) $user['id']);
         $postId = (int) ($comment['post_id'] ?? 0);
         $content = trim((string) ($_POST['content'] ?? ''));
-        if ($comment && $content !== '' && strlen($content) <= 500) {
+        if ($comment && !$this->posts->canView($postId, (int) $user['id'])) {
+            set_flash('error', 'That comment is unavailable.');
+        } elseif ($comment && $content !== '' && strlen($content) <= 500) {
             $this->comments->update($id, $content);
         }
         redirect(url(['page' => 'feed']) . ($postId > 0 ? '#post-' . $postId : ''));
@@ -64,12 +89,44 @@ final class CommentController
         $comment = $this->comments->find((int) ($_POST['id'] ?? 0));
         $postId = (int) ($comment['post_id'] ?? 0);
         $isAdmin = ($user['role'] ?? 'user') === 'admin';
-        if ($comment && ($isAdmin || (int) $comment['user_id'] === (int) $user['id'])) {
+        if ($comment && !$this->posts->canView($postId, (int) $user['id'])) {
+            set_flash('error', 'That comment is unavailable.');
+        } elseif ($comment && ($isAdmin || (int) $comment['user_id'] === (int) $user['id'])) {
             $this->comments->delete((int) $comment['id']);
         } else {
             set_flash('error', 'You can only delete your own comments.');
         }
         redirect(url(['page' => 'feed']) . ($postId > 0 ? '#post-' . $postId : ''));
+    }
+
+    public function toggleLike(): void
+    {
+        $user = require_auth();
+        verify_csrf();
+        $commentId = (int) ($_POST['comment_id'] ?? 0);
+        $comment = $this->comments->findWithAuthor($commentId);
+        $postId = (int) ($comment['post_id'] ?? 0);
+        if (!$comment || !$this->posts->canView($postId, (int) $user['id'])) {
+            http_response_code(404);
+            if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['error' => 'Comment not found.']);
+                return;
+            }
+            set_flash('error', 'That comment is unavailable.');
+            redirect(url(['page' => 'feed']));
+        }
+        $liked = $this->comments->toggleLike($commentId, (int) $user['id']);
+        if ($liked) {
+            $this->notifications->notifyCommentLike((int) $comment['user_id'], (int) $user['id'], $postId, $commentId);
+        }
+        $state = $this->comments->likeState($commentId, (int) $user['id']);
+        if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode($state);
+            return;
+        }
+        redirect(url(['page' => 'feed']) . '#post-' . $postId);
     }
 
     private function ownedComment(int $id, int $userId): ?array

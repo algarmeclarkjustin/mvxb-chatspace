@@ -11,10 +11,9 @@ final class FeedController
     {
         $user = require_auth();
         $query = trim((string) ($_GET['q'] ?? ''));
-        $posts = $this->posts->feed($query);
+        $posts = $this->posts->feed((int) $user['id'], $query);
         foreach ($posts as &$post) {
-            $post['comments'] = $this->comments->forPost((int) $post['id']);
-            $post['liked'] = $this->posts->likedBy((int) $post['id'], (int) $user['id']);
+            $post['comments'] = $this->comments->forPost((int) $post['id'], (int) $user['id']);
         }
         unset($post);
         render('feed/index', ['title' => 'Your feed', 'posts' => $posts, 'query' => $query, 'suggestions' => $this->users->search('')]);

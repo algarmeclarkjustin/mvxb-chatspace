@@ -1,6 +1,6 @@
 # Mini Social
 
-A PHP MVC mini social network for the Web Systems and Technologies final project. It includes session authentication, profiles, a chronological feed, image posts, comments, likes, and user search.
+A PHP MVC mini social network for the Web Systems and Technologies final project. It includes session authentication, profiles, a chronological feed, image posts, comments and comment hearts, post favorites, mentions and notifications, follower-only/private/public post visibility, pinned profile posts, sharing, and post/user search.
 
 ## Requirements
 
@@ -17,7 +17,7 @@ A PHP MVC mini social network for the Web Systems and Technologies final project
 
 The default local database connection is host `127.0.0.1`, database `social_app`, user `root`, and an empty password. Set `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASS` environment variables to override it.
 
-The SQL file includes three demo accounts, posts, comments, and likes. Each demo account uses the password `commonplace123`.
+The SQL file includes three demo accounts, posts, comments, and likes. It also creates the follower, favorite, comment-heart, and notification tables and safely adds post visibility/pinning columns to an existing database. Re-import it to upgrade an earlier version without deleting existing data. Each demo account uses the password `commonplace123`.
 
 The administrator uses username `admin` and password `MiniAdmin2026!`. The single SQL file also adds the admin role to an existing `users` table without deleting its data.
 

@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS posts (
     user_id INT UNSIGNED NOT NULL,
     content TEXT NOT NULL,
     image VARCHAR(255) NULL,
+    visibility ENUM('public', 'followers', 'private') NOT NULL DEFAULT 'public',
+    is_pinned TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     KEY idx_posts_created_at (created_at),
@@ -44,18 +46,60 @@ CREATE TABLE IF NOT EXISTS posts (
     CONSTRAINT fk_posts_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+SET @visibility_column_exists = (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'posts' AND COLUMN_NAME = 'visibility'
+);
+SET @visibility_migration = IF(
+    @visibility_column_exists = 0,
+    'ALTER TABLE posts ADD COLUMN visibility ENUM(''public'', ''followers'', ''private'') NOT NULL DEFAULT ''public''',
+    'SELECT 1'
+);
+PREPARE ensure_post_visibility FROM @visibility_migration;
+EXECUTE ensure_post_visibility;
+DEALLOCATE PREPARE ensure_post_visibility;
+
+SET @pinned_column_exists = (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'posts' AND COLUMN_NAME = 'is_pinned'
+);
+SET @pinned_migration = IF(
+    @pinned_column_exists = 0,
+    'ALTER TABLE posts ADD COLUMN is_pinned TINYINT(1) NOT NULL DEFAULT 0',
+    'SELECT 1'
+);
+PREPARE ensure_post_pinned FROM @pinned_migration;
+EXECUTE ensure_post_pinned;
+DEALLOCATE PREPARE ensure_post_pinned;
+
 CREATE TABLE IF NOT EXISTS comments (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     post_id INT UNSIGNED NOT NULL,
     user_id INT UNSIGNED NOT NULL,
+    parent_comment_id INT UNSIGNED NULL,
     content VARCHAR(500) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     KEY idx_comments_post_created (post_id, created_at),
     KEY idx_comments_user_id (user_id),
+    KEY idx_comments_parent (parent_comment_id),
     CONSTRAINT fk_comments_post FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE,
-    CONSTRAINT fk_comments_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    CONSTRAINT fk_comments_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_comments_parent FOREIGN KEY (parent_comment_id) REFERENCES comments (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET @parent_comment_column_exists = (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'comments' AND COLUMN_NAME = 'parent_comment_id'
+);
+SET @parent_comment_migration = IF(
+    @parent_comment_column_exists = 0,
+    'ALTER TABLE comments ADD COLUMN parent_comment_id INT UNSIGNED NULL, ADD KEY idx_comments_parent (parent_comment_id), ADD CONSTRAINT fk_comments_parent FOREIGN KEY (parent_comment_id) REFERENCES comments (id) ON DELETE CASCADE',
+    'SELECT 1'
+);
+PREPARE ensure_comment_parent FROM @parent_comment_migration;
+EXECUTE ensure_comment_parent;
+DEALLOCATE PREPARE ensure_comment_parent;
 
 CREATE TABLE IF NOT EXISTS likes (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -67,6 +111,53 @@ CREATE TABLE IF NOT EXISTS likes (
     KEY idx_likes_user_id (user_id),
     CONSTRAINT fk_likes_post FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE,
     CONSTRAINT fk_likes_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS followers (
+    follower_id INT UNSIGNED NOT NULL,
+    followed_id INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (follower_id, followed_id),
+    KEY idx_followers_followed (followed_id),
+    CONSTRAINT fk_followers_follower FOREIGN KEY (follower_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_followers_followed FOREIGN KEY (followed_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS favorites (
+    user_id INT UNSIGNED NOT NULL,
+    post_id INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, post_id),
+    KEY idx_favorites_post (post_id),
+    CONSTRAINT fk_favorites_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_favorites_post FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS comment_likes (
+    comment_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (comment_id, user_id),
+    KEY idx_comment_likes_user (user_id),
+    CONSTRAINT fk_comment_likes_comment FOREIGN KEY (comment_id) REFERENCES comments (id) ON DELETE CASCADE,
+    CONSTRAINT fk_comment_likes_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    recipient_id INT UNSIGNED NOT NULL,
+    actor_id INT UNSIGNED NOT NULL,
+    type ENUM('mention', 'post_like', 'comment_like') NOT NULL,
+    post_id INT UNSIGNED NULL,
+    comment_id INT UNSIGNED NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    read_at TIMESTAMP NULL DEFAULT NULL,
+    PRIMARY KEY (id),
+    KEY idx_notifications_recipient (recipient_id, created_at),
+    CONSTRAINT fk_notifications_recipient FOREIGN KEY (recipient_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_actor FOREIGN KEY (actor_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_post FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_comment FOREIGN KEY (comment_id) REFERENCES comments (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Demo accounts use the password: commonplace123

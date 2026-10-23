@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 final class PostController
 {
-    public function __construct(private PostModel $posts)
+    public function __construct(private PostModel $posts, private NotificationModel $notifications)
     {
     }
 
@@ -12,6 +12,10 @@ final class PostController
         $user = require_auth();
         verify_csrf();
         $content = trim((string) ($_POST['content'] ?? ''));
+        $visibility = (string) ($_POST['visibility'] ?? 'public');
+        if (!in_array($visibility, ['public', 'followers', 'private'], true)) {
+            $visibility = 'public';
+        }
         if (strlen($content) > 2000) {
             set_flash('error', 'A post must be 2,000 characters or fewer.');
             redirect(url(['page' => 'feed']));
@@ -22,7 +26,8 @@ final class PostController
                 set_flash('error', 'Add some text or choose a photo before sharing.');
                 redirect(url(['page' => 'feed']));
             }
-            $this->posts->create((int) $user['id'], $content, $image);
+            $postId = $this->posts->create((int) $user['id'], $content, $image, $visibility);
+            $this->notifications->notifyMentions($content, (int) $user['id'], $postId);
             set_flash('success', 'Your post is live.');
         } catch (RuntimeException $exception) {
             set_flash('error', $exception->getMessage());
@@ -50,6 +55,10 @@ final class PostController
             redirect(url(['page' => 'feed']));
         }
         $content = trim((string) ($_POST['content'] ?? ''));
+        $visibility = (string) ($_POST['visibility'] ?? ($post['visibility'] ?? 'public'));
+        if (!in_array($visibility, ['public', 'followers', 'private'], true)) {
+            $visibility = 'public';
+        }
         if (strlen($content) > 2000) {
             set_flash('error', 'A post must be 2,000 characters or fewer.');
             redirect(url(['page' => 'post-edit', 'id' => $id]));
@@ -60,7 +69,7 @@ final class PostController
                 set_flash('error', 'Add some text or choose a photo before saving.');
                 redirect(url(['page' => 'post-edit', 'id' => $id]));
             }
-            $this->posts->update($id, $content, $image);
+            $this->posts->update($id, $content, $image, $visibility);
             set_flash('success', 'Your post has been updated.');
         } catch (RuntimeException $exception) {
             set_flash('error', $exception->getMessage());
@@ -82,6 +91,22 @@ final class PostController
             set_flash('error', 'You can only delete your own posts.');
         }
         redirect(url(['page' => 'feed']));
+    }
+
+    public function togglePin(): void
+    {
+        $user = require_auth();
+        verify_csrf();
+        $id = (int) ($_POST['id'] ?? 0);
+        $post = $this->posts->find($id);
+        if (!$post || (int) $post['user_id'] !== (int) $user['id']) {
+            set_flash('error', 'You can only pin your own posts.');
+            redirect(url(['page' => 'profile', 'username' => $user['username']]));
+        }
+        $wasPinned = (bool) $post['is_pinned'];
+        $this->posts->togglePin($id, (int) $user['id']);
+        set_flash('success', $wasPinned ? 'Post unpinned from your profile.' : 'Post pinned to your profile.');
+        redirect(url(['page' => 'profile', 'username' => $user['username']]));
     }
 
     private function ownedPost(int $id, int $userId): ?array

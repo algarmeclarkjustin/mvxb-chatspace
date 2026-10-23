@@ -6,6 +6,14 @@ function e(?string $value): string
     return htmlspecialchars($value ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+function linked_mentions(string $text): string
+{
+    $escaped = e($text);
+    return preg_replace_callback('/(?<![A-Za-z0-9_])@([A-Za-z0-9_]{1,24})/', static function (array $match): string {
+        return '<a class="mention" href="' . e(url(['page' => 'profile', 'username' => $match[1]])) . '">@' . $match[1] . '</a>';
+    }, $escaped) ?? $escaped;
+}
+
 function url(array $parameters = []): string
 {
     return 'index.php' . ($parameters ? '?' . http_build_query($parameters) : '');
@@ -77,6 +85,13 @@ function verify_csrf(): void
 
 function render(string $view, array $data = []): void
 {
+    $notifications = $GLOBALS['notification_model'] ?? null;
+    $viewer = current_user();
+    if ($notifications instanceof NotificationModel && $viewer) {
+        $data['unreadNotificationCount'] = $notifications->unreadCount((int) $viewer['id']);
+    } else {
+        $data['unreadNotificationCount'] = 0;
+    }
     extract($data, EXTR_SKIP);
     require __DIR__ . '/views/partials/header.php';
     require __DIR__ . '/views/' . $view . '.php';

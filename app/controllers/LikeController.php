@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 final class LikeController
 {
-    public function __construct(private LikeModel $likes, private PostModel $posts)
+    public function __construct(private LikeModel $likes, private PostModel $posts, private NotificationModel $notifications)
     {
     }
 
@@ -13,8 +13,13 @@ final class LikeController
         verify_csrf();
         $postId = (int) ($_POST['post_id'] ?? 0);
         $post = $this->posts->find($postId);
-        if ($post) {
-            $this->likes->toggle($postId, (int) $user['id']);
+        if ($post && $this->posts->canView($postId, (int) $user['id'])) {
+            $liked = $this->likes->toggle($postId, (int) $user['id']);
+            if ($liked) {
+                $this->notifications->notifyPostLike((int) $post['user_id'], (int) $user['id'], $postId);
+            }
+        } else {
+            $post = null;
         }
 
         if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {

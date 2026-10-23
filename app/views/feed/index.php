@@ -1,8 +1,10 @@
 <div class="feed-layout">
     <aside class="feed-rail">
         <span class="eyebrow">Your corner</span>
-        <a class="rail-link active" href="<?= e(url(['page' => 'feed'])) ?>"><i class="bi bi-house-door"></i> The feed</a>
-        <a class="rail-link" href="<?= e(url(['page' => 'search-users'])) ?>"><i class="bi bi-people"></i> Find people</a>
+        <a class="rail-link <?= ($currentPage ?? '') === 'feed' ? 'active' : '' ?>" href="<?= e(url(['page' => 'feed'])) ?>"><i class="bi bi-house-door"></i> The feed</a>
+        <a class="rail-link <?= ($currentPage ?? '') === 'search-users' ? 'active' : '' ?>" href="<?= e(url(['page' => 'search-users'])) ?>"><i class="bi bi-people"></i> Find people</a>
+        <a class="rail-link <?= ($currentPage ?? '') === 'favorites' ? 'active' : '' ?>" href="<?= e(url(['page' => 'favorites'])) ?>"><i class="bi bi-bookmark-heart"></i> Favorites</a>
+        <a class="rail-link" href="<?= e(url(['page' => 'notifications'])) ?>"><i class="bi bi-bell"></i> Notifications</a>
         <div class="rail-note"><i class="bi bi-chat-heart"></i>
             <p>Good conversations start with showing up.</p>
         </div>
@@ -10,11 +12,11 @@
 
     <section class="feed-main">
         <div class="section-heading">
-            <div><span class="eyebrow">Monday to whenever</span>
-                <h1>Your feed</h1>
+            <div><span class="eyebrow"><?= e($feedEyebrow ?? 'Monday to whenever') ?></span>
+                <h1><?= e($feedHeading ?? 'Your feed') ?></h1>
             </div><span class="live-dot">A shared space</span>
         </div>
-        <form class="composer" action="<?= e(url(['page' => 'post-create'])) ?>" method="post" enctype="multipart/form-data">
+        <?php if (($currentPage ?? 'feed') === 'feed'): ?><form class="composer" action="<?= e(url(['page' => 'post-create'])) ?>" method="post" enctype="multipart/form-data">
             <?= csrf_field() ?>
             <div class="composer-top">
                 <?php if (!empty($viewer['profile_image'])): ?><img class="avatar" src="public/uploads/<?= e($viewer['profile_image']) ?>" alt="">
@@ -22,8 +24,8 @@
                 <textarea name="content" rows="2" maxlength="2000" placeholder="What’s on your mind, <?= e(explode(' ', $viewer['full_name'] ?? $viewer['username'])[0]) ?>?"></textarea>
             </div>
             <div class="image-preview" data-image-preview hidden><img alt="Selected photo preview"><button class="image-preview-clear" type="button" data-clear-image aria-label="Remove selected photo"><i class="bi bi-x-lg"></i></button></div>
-            <div class="composer-bottom"><label class="file-pick"><i class="bi bi-image"></i><span>Add a photo</span><input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif"></label><span class="quiet-hint">Keep it kind. Keep it you.</span><button class="button button-primary" type="submit">Share <i class="bi bi-arrow-up-right"></i></button></div>
-        </form>
+            <div class="composer-bottom"><label class="file-pick"><i class="bi bi-image"></i><span>Add a photo</span><input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif"></label><label class="visibility-select"><i class="bi bi-shield-lock"></i><span class="sr-only">Post audience</span><select name="visibility" aria-label="Post audience"><option value="public">Public</option><option value="followers">Friends only</option><option value="private">Only me</option></select></label><span class="quiet-hint">Use @username to mention people.</span><button class="button button-primary" type="submit">Share <i class="bi bi-arrow-up-right"></i></button></div>
+        </form><?php endif; ?>
 
         <?php if ($query !== ''): ?><div class="search-result-line">Showing posts for “<?= e($query) ?>” <a href="<?= e(url(['page' => 'feed'])) ?>">Clear</a></div><?php endif; ?>
 

@@ -64,6 +64,39 @@ final class UserModel
         return $statement->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
+    public function toggleFollow(int $followerId, int $followedId): bool
+    {
+        if ($followerId === $followedId) {
+            return false;
+        }
+        $statement = $this->db->prepare('DELETE FROM followers WHERE follower_id = ? AND followed_id = ?');
+        $statement->bind_param('ii', $followerId, $followedId);
+        $statement->execute();
+        if ($statement->affected_rows > 0) {
+            return false;
+        }
+        $statement = $this->db->prepare('INSERT INTO followers (follower_id, followed_id) VALUES (?, ?)');
+        $statement->bind_param('ii', $followerId, $followedId);
+        $statement->execute();
+        return true;
+    }
+
+    public function isFollowing(int $followerId, int $followedId): bool
+    {
+        $statement = $this->db->prepare('SELECT 1 FROM followers WHERE follower_id = ? AND followed_id = ?');
+        $statement->bind_param('ii', $followerId, $followedId);
+        $statement->execute();
+        return (bool) $statement->get_result()->fetch_row();
+    }
+
+    public function followerCount(int $userId): int
+    {
+        $statement = $this->db->prepare('SELECT COUNT(*) AS total FROM followers WHERE followed_id = ?');
+        $statement->bind_param('i', $userId);
+        $statement->execute();
+        return (int) $statement->get_result()->fetch_assoc()['total'];
+    }
+
     public function countAll(): int
     {
         $statement = $this->db->prepare('SELECT COUNT(*) AS total FROM users');

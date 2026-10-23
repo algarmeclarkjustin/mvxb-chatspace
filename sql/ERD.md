@@ -7,6 +7,14 @@ erDiagram
     POSTS ||--o{ COMMENTS : receives
     USERS ||--o{ LIKES : gives
     POSTS ||--o{ LIKES : receives
+    USERS ||--o{ FOLLOWERS : follows
+    USERS ||--o{ FOLLOWERS : followed
+    USERS ||--o{ FAVORITES : saves
+    POSTS ||--o{ FAVORITES : saved
+    USERS ||--o{ COMMENT_LIKES : gives
+    COMMENTS ||--o{ COMMENT_LIKES : receives
+    USERS ||--o{ NOTIFICATIONS : receives
+    USERS ||--o{ NOTIFICATIONS : triggers
 
     USERS {
         int id PK
@@ -24,6 +32,8 @@ erDiagram
         int user_id FK
         text content
         varchar image
+        enum visibility
+        boolean is_pinned
         timestamp created_at
     }
     COMMENTS {
@@ -38,5 +48,30 @@ erDiagram
         int post_id FK
         int user_id FK
         timestamp created_at
+    }
+    FOLLOWERS {
+        int follower_id PK, FK
+        int followed_id PK, FK
+        timestamp created_at
+    }
+    FAVORITES {
+        int user_id PK, FK
+        int post_id PK, FK
+        timestamp created_at
+    }
+    COMMENT_LIKES {
+        int comment_id PK, FK
+        int user_id PK, FK
+        timestamp created_at
+    }
+    NOTIFICATIONS {
+        int id PK
+        int recipient_id FK
+        int actor_id FK
+        enum type
+        int post_id FK
+        int comment_id FK
+        timestamp created_at
+        timestamp read_at
     }
 ```
