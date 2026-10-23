@@ -55,7 +55,7 @@ final class CommentModel
 
     public function topLevelCommentForPost(int $commentId, int $postId): ?array
     {
-        $statement = $this->db->prepare('SELECT id, post_id FROM comments WHERE id = ? AND post_id = ? AND parent_comment_id IS NULL');
+        $statement = $this->db->prepare('SELECT id, post_id, user_id FROM comments WHERE id = ? AND post_id = ? AND parent_comment_id IS NULL');
         $statement->bind_param('ii', $commentId, $postId);
         $statement->execute();
         return $statement->get_result()->fetch_assoc() ?: null;

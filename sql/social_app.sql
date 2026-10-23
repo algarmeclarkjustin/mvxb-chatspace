@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     recipient_id INT UNSIGNED NOT NULL,
     actor_id INT UNSIGNED NOT NULL,
-    type ENUM('mention', 'post_like', 'comment_like') NOT NULL,
+    type ENUM('mention', 'post_like', 'comment_like', 'comment_reply', 'comment', 'share', 'activity') NOT NULL,
     post_id INT UNSIGNED NULL,
     comment_id INT UNSIGNED NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -159,6 +159,9 @@ CREATE TABLE IF NOT EXISTS notifications (
     CONSTRAINT fk_notifications_post FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE,
     CONSTRAINT fk_notifications_comment FOREIGN KEY (comment_id) REFERENCES comments (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE notifications MODIFY COLUMN type ENUM('mention', 'post_like', 'comment_like', 'comment_reply', 'comment', 'share', 'activity') NOT NULL;
+UPDATE notifications SET type = 'activity' WHERE type = '';
 
 -- Demo accounts use the password: commonplace123
 INSERT IGNORE INTO users (id, username, email, password, full_name, bio, role) VALUES

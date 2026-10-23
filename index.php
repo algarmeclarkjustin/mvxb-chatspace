@@ -88,6 +88,9 @@ try {
         case 'notifications':
             (new NotificationController($notifications))->index();
             break;
+        case 'share-track':
+            (new ShareController($posts, $notifications))->track();
+            break;
         case 'follow-toggle':
             (new ProfileController($users, $posts))->toggleFollow();
             break;

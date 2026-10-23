@@ -31,10 +31,28 @@ final class NotificationModel
         $this->create($recipientId, $actorId, 'comment_like', $postId, $commentId);
     }
 
+    public function notifyCommentReply(int $recipientId, int $actorId, int $postId, int $commentId): void
+    {
+        $this->create($recipientId, $actorId, 'comment_reply', $postId, $commentId);
+    }
+
+    public function notifyPostComment(int $recipientId, int $actorId, int $postId, int $commentId): void
+    {
+        $this->create($recipientId, $actorId, 'comment', $postId, $commentId);
+    }
+
+    public function notifyShare(int $recipientId, int $actorId, int $postId): void
+    {
+        $this->create($recipientId, $actorId, 'share', $postId);
+    }
+
     public function forUser(int $userId): array
     {
-        $statement = $this->db->prepare('SELECT n.*, actor.username AS actor_username, actor.full_name AS actor_name
-            FROM notifications n JOIN users actor ON actor.id = n.actor_id
+        $statement = $this->db->prepare('SELECT n.*, COALESCE(actor.username, \'unknown\') AS actor_username,
+            p.content AS post_content, c.content AS comment_content
+            FROM notifications n LEFT JOIN users actor ON actor.id = n.actor_id
+            LEFT JOIN posts p ON p.id = n.post_id
+            LEFT JOIN comments c ON c.id = n.comment_id
             WHERE n.recipient_id = ? ORDER BY n.created_at DESC LIMIT 100');
         $statement->bind_param('i', $userId);
         $statement->execute();

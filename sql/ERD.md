@@ -5,6 +5,7 @@ erDiagram
     USERS ||--o{ POSTS : writes
     USERS ||--o{ COMMENTS : adds
     POSTS ||--o{ COMMENTS : receives
+    COMMENTS o|--o{ COMMENTS : replies
     USERS ||--o{ LIKES : gives
     POSTS ||--o{ LIKES : receives
     USERS ||--o{ FOLLOWERS : follows
@@ -40,6 +41,7 @@ erDiagram
         int id PK
         int post_id FK
         int user_id FK
+        int parent_comment_id FK
         varchar content
         timestamp created_at
     }
@@ -68,7 +70,7 @@ erDiagram
         int id PK
         int recipient_id FK
         int actor_id FK
-        enum type
+        enum type "mention, post_like, comment_like, comment_reply, comment, share, activity"
         int post_id FK
         int comment_id FK
         timestamp created_at

@@ -22,32 +22,54 @@ if (themeToggle) {
   });
 }
 
-document.addEventListener('click', (event) => {
+document.addEventListener('click', async (event) => {
   const shareButton = event.target.closest('[data-share-post]');
   if (shareButton) {
+    if (shareButton.dataset.pending === 'true') return;
+    shareButton.dataset.pending = 'true';
     const shareUrl = new URL('index.php', window.location.href);
     shareUrl.searchParams.set('page', 'feed');
     shareUrl.hash = `post-${shareButton.dataset.sharePost}`;
-    const title = 'MVXB ChatSpace post';
-    const text = 'Take a look at this post.';
-    if (navigator.share) {
-      navigator.share({ title, text, url: shareUrl.href }).catch((error) => {
-        if (error.name !== 'AbortError') console.error('Post could not be shared.', error);
+    const recordShare = async () => {
+      const data = new FormData();
+      data.set('post_id', shareButton.dataset.sharePost);
+      data.set('csrf_token', shareButton.dataset.csrfToken);
+      const response = await fetch(shareButton.dataset.shareAction, {
+        method: 'POST',
+        body: data,
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       });
-    } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareUrl.href)
-        .then(() => {
-          const label = shareButton.querySelector('span');
-          label.textContent = 'Copied!';
-          window.setTimeout(() => { label.textContent = 'Share'; }, 1800);
-        })
-        .catch((error) => {
-          console.error('Share link could not be copied.', error);
-          window.prompt('Copy this post link:', shareUrl.href);
-        });
-    } else {
-      window.prompt('Copy this post link:', shareUrl.href);
+      if (!response.ok) throw new Error('Share notification could not be recorded.');
+    };
+    let shared = false;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'MVXB ChatSpace post', text: 'Take a look at this post.', url: shareUrl.href });
+        shared = true;
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl.href);
+        shared = true;
+        const label = shareButton.querySelector('span');
+        label.textContent = 'Copied!';
+        window.setTimeout(() => { label.textContent = 'Share'; }, 1800);
+      } else {
+        shared = window.prompt('Copy this post link:', shareUrl.href) !== null;
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error('Post could not be shared.', error);
+        window.alert('The post could not be shared right now. Please try again.');
+      }
     }
+    if (shared) {
+      try {
+        await recordShare();
+      } catch (error) {
+        console.error('Post share notification could not be recorded.', error);
+      }
+    }
+    delete shareButton.dataset.pending;
     return;
   }
 
@@ -75,9 +97,18 @@ document.addEventListener('click', (event) => {
   }
 
   const replyLink = event.target.closest('a[href^="#comment-form-"]');
-  if (!replyLink) return;
+  if (replyLink) {
+    event.preventDefault();
+    return;
+  }
 
-  event.preventDefault();
+  const replyButton = event.target.closest('[data-reply-comment]');
+  if (!replyButton) return;
+  const post = replyButton.closest('.post');
+  const replyForm = post.querySelector(`#reply-form-${post.id.replace('post-', '')}-${replyButton.dataset.replyComment}`);
+  if (!replyForm) return;
+  replyForm.hidden = !replyForm.hidden;
+  if (!replyForm.hidden) replyForm.querySelector('input[name="content"]').focus();
 });
 
 document.addEventListener('change', (event) => {
@@ -161,38 +192,8 @@ document.addEventListener('submit', async (event) => {
       });
       if (!response.ok) throw new Error('Reply failed');
 
-      const comment = await response.json();
-      const post = commentForm.closest('.post');
-      const row = document.createElement('div');
-      row.className = 'comment-row';
-
-      const avatar = document.createElement('span');
-      avatar.className = 'comment-avatar';
-      avatar.textContent = comment.full_name.charAt(0).toUpperCase();
-
-      const content = document.createElement('div');
-      content.className = 'comment-content';
-      const heading = document.createElement('p');
-      const profileLink = document.createElement('a');
-      profileLink.href = comment.profile_url;
-      const name = document.createElement('strong');
-      name.textContent = comment.full_name;
-      profileLink.append(name);
-      const date = document.createElement('span');
-      date.textContent = comment.created_at;
-      heading.append(profileLink, document.createTextNode(' '), date);
-
-      const text = document.createElement('div');
-      text.className = 'comment-text';
-      text.textContent = comment.content;
-      content.append(heading, text);
-      row.append(avatar, content);
-      commentForm.before(row);
-
-      const count = Number(post.querySelector('[data-comment-total]').textContent) + 1;
-      post.querySelector('[data-comment-total]').textContent = count;
-      post.querySelector('[data-comment-word]').textContent = count === 1 ? 'reply' : 'replies';
-      commentForm.reset();
+      await response.json();
+      window.location.reload();
     } catch {
       commentForm.submit();
     } finally {

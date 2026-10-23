@@ -10,10 +10,11 @@ final class NotificationController
     public function index(): void
     {
         $user = require_auth();
+        $notifications = $this->notifications->forUser((int) $user['id']);
         $this->notifications->markRead((int) $user['id']);
         render('notifications/index', [
             'title' => 'Notifications',
-            'notifications' => $this->notifications->forUser((int) $user['id']),
+            'notifications' => $notifications,
         ]);
     }
 }

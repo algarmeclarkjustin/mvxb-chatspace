@@ -24,7 +24,8 @@ final class CommentController
             set_flash('error', 'That post is unavailable.');
             redirect(url(['page' => 'feed']));
         }
-        if ($parentCommentId > 0 && !$this->comments->topLevelCommentForPost($parentCommentId, $postId)) {
+        $parentComment = $parentCommentId > 0 ? $this->comments->topLevelCommentForPost($parentCommentId, $postId) : null;
+        if ($parentCommentId > 0 && !$parentComment) {
             http_response_code(422);
             if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {
                 header('Content-Type: application/json; charset=utf-8');
@@ -44,6 +45,14 @@ final class CommentController
             set_flash('error', 'Comments must contain 1-500 characters.');
         } else {
             $commentId = $this->comments->create($postId, (int) $user['id'], $content, $parentCommentId > 0 ? $parentCommentId : null);
+            if ($parentComment) {
+                $this->notifications->notifyCommentReply((int) $parentComment['user_id'], (int) $user['id'], $postId, $commentId);
+            } else {
+                $post = $this->posts->find($postId);
+                if ($post) {
+                    $this->notifications->notifyPostComment((int) $post['user_id'], (int) $user['id'], $postId, $commentId);
+                }
+            }
             $this->notifications->notifyMentions($content, (int) $user['id'], $postId, $commentId);
             if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest') {
                 $comment = $this->comments->findWithAuthor($commentId);

@@ -4,7 +4,7 @@
         <a class="rail-link <?= ($currentPage ?? '') === 'feed' ? 'active' : '' ?>" href="<?= e(url(['page' => 'feed'])) ?>"><i class="bi bi-house-door"></i> The feed</a>
         <a class="rail-link <?= ($currentPage ?? '') === 'search-users' ? 'active' : '' ?>" href="<?= e(url(['page' => 'search-users'])) ?>"><i class="bi bi-people"></i> Find people</a>
         <a class="rail-link <?= ($currentPage ?? '') === 'favorites' ? 'active' : '' ?>" href="<?= e(url(['page' => 'favorites'])) ?>"><i class="bi bi-bookmark-heart"></i> Favorites</a>
-        <a class="rail-link" href="<?= e(url(['page' => 'notifications'])) ?>"><i class="bi bi-bell"></i> Notifications</a>
+        <a class="rail-link rail-notifications" href="<?= e(url(['page' => 'notifications'])) ?>"><i class="bi bi-bell"></i> Notifications<?php if ($unreadNotificationCount > 0): ?><span class="notification-badge"><?= (int) $unreadNotificationCount ?></span><?php endif; ?></a>
         <div class="rail-note"><i class="bi bi-chat-heart"></i>
             <p>Good conversations start with showing up.</p>
         </div>

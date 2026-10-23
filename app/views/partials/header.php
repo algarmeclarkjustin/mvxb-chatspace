@@ -38,7 +38,6 @@
         </form>
         <nav class="top-actions" aria-label="Account navigation">
             <a class="icon-link" href="<?= e(url(['page' => 'feed'])) ?>" aria-label="Home" title="Home"><i class="bi bi-house-door"></i></a>
-            <a class="icon-link notification-link" href="<?= e(url(['page' => 'notifications'])) ?>" aria-label="Notifications<?= $unreadNotificationCount > 0 ? ', ' . (int) $unreadNotificationCount . ' unread' : '' ?>" title="Notifications<?= $unreadNotificationCount > 0 ? ' (' . (int) $unreadNotificationCount . ' unread)' : '' ?>"><i class="bi bi-bell"></i><?php if ($unreadNotificationCount > 0): ?><span class="notification-badge"><?= (int) $unreadNotificationCount ?></span><?php endif; ?></a>
             <?php if (($viewer['role'] ?? 'user') === 'admin'): ?><a class="admin-nav-link" href="<?= e(url(['page' => 'admin'])) ?>"><i class="bi bi-shield-check"></i> Admin</a><?php endif; ?>
             <a class="viewer-link" href="<?= e(url(['page' => 'profile', 'username' => $viewer['username']])) ?>">
                 <?php if (!empty($viewer['profile_image'])): ?><img class="avatar avatar-small" src="public/uploads/<?= e($viewer['profile_image']) ?>" alt="">
