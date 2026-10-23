@@ -1,3 +1,27 @@
+const themeToggle = document.querySelector('[data-theme-toggle]');
+
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const isDark = theme === 'dark';
+  themeToggle.setAttribute('aria-label', `Switch to ${isDark ? 'light' : 'dark'} mode`);
+  themeToggle.title = `Switch to ${isDark ? 'light' : 'dark'} mode`;
+  themeToggle.querySelector('i').className = `bi ${isDark ? 'bi-sun' : 'bi-moon-stars'}`;
+  document.querySelector('meta[name="theme-color"]').content = isDark ? '#101614' : '#ffffff';
+}
+
+if (themeToggle) {
+  setTheme(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+  themeToggle.addEventListener('click', () => {
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    setTheme(theme);
+    try {
+      localStorage.setItem('chatspace-theme', theme);
+    } catch (error) {
+      console.warn('Theme preference could not be saved.', error);
+    }
+  });
+}
+
 document.addEventListener('click', (event) => {
   const imageTrigger = event.target.closest('[data-image-viewer-trigger]');
   if (imageTrigger) {
@@ -49,15 +73,15 @@ document.addEventListener('change', (event) => {
     preview.dataset.objectUrl = objectUrl;
     previewImage.src = objectUrl;
     preview.hidden = false;
-    clearButton.hidden = false;
+    if (clearButton) clearButton.hidden = false;
   } else if (preview.dataset.originalSrc) {
     previewImage.src = preview.dataset.originalSrc;
     preview.hidden = false;
-    clearButton.hidden = true;
+    if (clearButton) clearButton.hidden = true;
   } else {
     previewImage.removeAttribute('src');
     preview.hidden = true;
-    clearButton.hidden = true;
+    if (clearButton) clearButton.hidden = true;
   }
 });
 

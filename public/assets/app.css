@@ -11,15 +11,183 @@
   --coral: #df745f;
   --rose: #fff0eb;
   --soft: #edf3ef;
+  --topbar: rgba(255, 255, 255, 0.9);
+  --input: #fcfdfc;
+  --comment-surface: #f3f6f3;
+  --control-border: #dce5de;
   --serif: "Newsreader", Georgia, serif;
   --sans: "DM Sans", "Segoe UI", sans-serif;
+}
+.theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 17px;
+  cursor: pointer;
+}
+.theme-toggle:hover {
+  background: var(--soft);
+  color: var(--green);
 }
 
 * {
   box-sizing: border-box;
 }
+.profile-image-preview {
+  margin: 0;
+}
 html {
   scroll-behavior: smooth;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #101614;
+  --surface: #171f1b;
+  --ink: #e6eee9;
+  --muted: #a0afa6;
+  --line: #303c35;
+  --green: #83c9a4;
+  --green-deep: #a0d9b9;
+  --mint: #263d31;
+  --rose: #392a27;
+  --soft: #25312b;
+  --topbar: rgba(20, 27, 23, 0.94);
+  --input: #121a16;
+  --comment-surface: #222c26;
+  --control-border: #39463e;
+}
+html[data-theme="dark"] body,
+html[data-theme="dark"] body:not(.auth-body),
+html[data-theme="dark"] .auth-body {
+  background: var(--paper);
+  color: var(--ink);
+}
+html[data-theme="dark"] .topbar,
+html[data-theme="dark"] .auth-body .topbar {
+  background: var(--topbar);
+  border-color: var(--line);
+}
+html[data-theme="dark"] .auth-body .auth-panel,
+html[data-theme="dark"] .auth-body .form-stack input,
+html[data-theme="dark"] .button-outline,
+html[data-theme="dark"] .directory-search,
+html[data-theme="dark"] .comment-form,
+html[data-theme="dark"] .admin-delete,
+html[data-theme="dark"] .story-spark,
+html[data-theme="dark"] kbd {
+  background: var(--surface);
+  color: var(--ink);
+}
+html[data-theme="dark"] .auth-body .auth-panel,
+html[data-theme="dark"] .auth-layout,
+html[data-theme="dark"] .composer,
+html[data-theme="dark"] .admin-stat,
+html[data-theme="dark"] .admin-table-wrap,
+html[data-theme="dark"] .directory-search,
+html[data-theme="dark"] .profile-form .file-pick,
+html[data-theme="dark"] .admin-badge,
+html[data-theme="dark"] .role-pill,
+html[data-theme="dark"] .button-outline,
+html[data-theme="dark"] .comment-form,
+html[data-theme="dark"] .admin-delete,
+html[data-theme="dark"] kbd {
+  border-color: var(--control-border);
+}
+html[data-theme="dark"] .top-search input::placeholder,
+html[data-theme="dark"] .directory-search input::placeholder,
+html[data-theme="dark"] .composer textarea::placeholder,
+html[data-theme="dark"] .comment-form input::placeholder {
+  color: #9aa99f;
+}
+html[data-theme="dark"] .icon-link,
+html[data-theme="dark"] .rail-link,
+html[data-theme="dark"] .post-action,
+html[data-theme="dark"] .form-stack label,
+html[data-theme="dark"] .profile-form > label:not(.file-pick),
+html[data-theme="dark"] .field-label,
+html[data-theme="dark"] .auth-story > p,
+html[data-theme="dark"] .story-foot,
+html[data-theme="dark"] .person-bio,
+html[data-theme="dark"] .admin-badge,
+html[data-theme="dark"] .role-pill {
+  color: var(--muted);
+}
+html[data-theme="dark"] .rail-link:hover,
+html[data-theme="dark"] .rail-link.active,
+html[data-theme="dark"] .post-action:hover,
+html[data-theme="dark"] .button-outline:hover,
+html[data-theme="dark"] .theme-toggle:hover {
+  background: var(--soft);
+  color: var(--green-deep);
+}
+html[data-theme="dark"] .comment-content,
+html[data-theme="dark"] .form-stack input,
+html[data-theme="dark"] .profile-form input:not([type="file"]),
+html[data-theme="dark"] .profile-form textarea,
+html[data-theme="dark"] .edit-composer textarea {
+  background: var(--input);
+  color: var(--ink);
+  border-color: var(--control-border);
+}
+html[data-theme="dark"] .comment-form {
+  background: var(--input);
+}
+html[data-theme="dark"] .comment-form input {
+  background: transparent;
+  color: var(--ink);
+}
+html[data-theme="dark"] .comment-content {
+  background: var(--comment-surface);
+}
+html[data-theme="dark"] .auth-story {
+  background: #1c3428;
+}
+html[data-theme="dark"] .admin-table th {
+  background: #202a24;
+  color: var(--muted);
+}
+html[data-theme="dark"] .admin-table th,
+html[data-theme="dark"] .admin-table td {
+  border-color: var(--line);
+}
+html[data-theme="dark"] .admin-delete:hover {
+  background: var(--rose);
+}
+html[data-theme="dark"] .role-admin {
+  border-color: #426950;
+  background: #21392b;
+  color: #a0d9b9;
+}
+html[data-theme="dark"] .avatar-initial {
+  background: #284233;
+  color: #b3e0c4;
+}
+html[data-theme="dark"] .comment-avatar {
+  background: #3a2b27;
+  color: #e7b8a9;
+}
+html[data-theme="dark"] .flash-success {
+  border-color: #3d7055;
+  background: #1b3023;
+  color: #b4e4c3;
+}
+html[data-theme="dark"] .flash-error {
+  border-color: #75483e;
+  background: #382522;
+  color: #f0b6a8;
+}
+html[data-theme="dark"] .mobile-nav {
+  background: rgba(20, 27, 23, 0.96);
+}
+html[data-theme="dark"] .mobile-nav a {
+  color: var(--green-deep);
 }
 body {
   margin: 0;
@@ -75,6 +243,23 @@ button {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.profile-avatar-trigger {
+  display: block;
+  grid-row: span 2;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: zoom-in;
+}
+.profile-avatar-trigger:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 3px;
+}
+.profile-avatar-trigger .profile-avatar {
+  display: block;
+  grid-row: auto;
 }
 .top-search {
   display: flex;
@@ -1094,6 +1279,9 @@ h2 {
   border: 1px solid #dce5de;
   border-radius: 4px;
 }
+.profile-image-preview {
+  margin: 0;
+}
 .profile-current-avatar {
   width: 56px;
   height: 56px;
@@ -1215,6 +1403,10 @@ h2 {
 .auth-body {
   background: #fff;
 }
+.auth-body .theme-toggle {
+  position: absolute;
+  right: max(5.2vw, calc((100vw - 1320px) / 2));
+}
 .auth-body .topbar {
   justify-content: center;
   height: 76px;
@@ -1268,7 +1460,7 @@ body:not(.auth-body) {
   background: #fff;
 }
 .topbar {
-  background: #fff;
+  background: var(--topbar);
 }
 .feed-layout {
   gap: 34px;
@@ -1472,6 +1664,10 @@ body:not(.auth-body) {
   .viewer-link {
     display: flex;
   }
+  .theme-toggle {
+    width: 34px;
+    height: 34px;
+  }
   .top-actions form .icon-link {
     width: 32px;
   }
@@ -1621,7 +1817,7 @@ body:not(.auth-body) {
     font-size: 15px;
   }
   .top-search {
-    max-width: 145px;
+    max-width: 110px;
   }
   .top-actions {
     margin-left: 0;

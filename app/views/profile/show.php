@@ -1,7 +1,7 @@
 <section class="profile-page">
     <a class="back-link" href="<?= e(url(['page' => 'feed'])) ?>"><i class="bi bi-arrow-left"></i> Back to the feed</a>
     <header class="profile-header">
-        <?php if (!empty($profile['profile_image'])): ?><img class="profile-avatar" src="public/uploads/<?= e($profile['profile_image']) ?>" alt="<?= e($profile['full_name']) ?>">
+        <?php if (!empty($profile['profile_image'])): ?><button class="profile-avatar-trigger" type="button" data-image-viewer-trigger aria-label="View profile photo of <?= e($profile['full_name']) ?>"><img class="profile-avatar" src="public/uploads/<?= e($profile['profile_image']) ?>" alt="<?= e($profile['full_name']) ?>"></button>
         <?php else: ?><span class="profile-avatar avatar-initial"><?= e(strtoupper(substr($profile['full_name'], 0, 1))) ?></span><?php endif; ?>
         <div class="profile-identity"><span class="eyebrow">A little about me</span><h1><?= e($profile['full_name']) ?></h1><p>@<?= e($profile['username']) ?></p></div>
         <?php if ($isOwner): ?><a class="button button-outline" href="<?= e(url(['page' => 'profile-edit'])) ?>"><i class="bi bi-pencil"></i> Edit profile</a><?php endif; ?>

@@ -5,6 +5,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#ffffff">
+    <script>
+        try {
+            if (localStorage.getItem('chatspace-theme') === 'dark') {
+                document.documentElement.dataset.theme = 'dark';
+                document.querySelector('meta[name="theme-color"]').content = '#101614';
+            }
+        } catch (error) {
+            console.warn('Theme preference could not be loaded.', error);
+        }
+    </script>
     <title><?= e($title ?? 'MVXB ChatSpace') ?> · MVXB ChatSpace</title>
     <link rel="icon" type="image/jpeg" href="files/MVXB%20Logo.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,6 +49,7 @@
             </form>
         </nav>
     <?php endif; ?>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" title="Switch to dark mode"><i class="bi bi-moon-stars" aria-hidden="true"></i></button>
 </header>
 <?php if ($flash): ?>
     <div class="flash flash-<?= e($flash['type']) ?>" role="status"><i class="bi <?= $flash['type'] === 'error' ? 'bi-exclamation-circle' : 'bi-check-circle' ?>"></i><?= e($flash['message']) ?></div>
