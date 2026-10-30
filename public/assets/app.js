@@ -19,7 +19,7 @@ function updateNotificationBadges(count) {
   }
 }
 
-if (notificationStreamUrl) {
+if (notificationStreamUrl && typeof EventSource !== 'undefined') {
   const source = new EventSource(notificationStreamUrl);
   source.addEventListener('notification', (event) => {
     try {
@@ -30,12 +30,7 @@ if (notificationStreamUrl) {
     }
   });
   source.onerror = () => {
-    source.close();
-    setTimeout(() => {
-      if (!document.hidden) {
-        window.location.reload();
-      }
-    }, 4000);
+    console.warn('Notification stream disconnected; browser will retry automatically.');
   };
 }
 
