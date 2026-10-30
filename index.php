@@ -98,9 +98,6 @@ try {
         case 'notifications':
             (new NotificationController($notifications, $posts))->index();
             break;
-        case 'notification-stream':
-            (new NotificationController($notifications, $posts))->stream();
-            break;
         case 'notification-dismiss':
             (new NotificationController($notifications, $posts))->dismiss();
             break;

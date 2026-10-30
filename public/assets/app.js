@@ -1,39 +1,3 @@
-const notificationStreamUrl = document.body.dataset.notificationStream || '';
-
-function updateNotificationBadges(count) {
-  const unreadCount = Number(count) || 0;
-  const badges = document.querySelectorAll('[data-notification-badge]');
-  badges.forEach((badge) => {
-    if (unreadCount > 0) {
-      badge.hidden = false;
-      badge.textContent = String(unreadCount);
-    } else {
-      badge.hidden = true;
-      badge.textContent = '0';
-    }
-  });
-
-  const total = document.querySelector('[data-notification-total]');
-  if (total) {
-    total.textContent = `${unreadCount} unread`;
-  }
-}
-
-if (notificationStreamUrl && typeof EventSource !== 'undefined') {
-  const source = new EventSource(notificationStreamUrl);
-  source.addEventListener('notification', (event) => {
-    try {
-      const payload = JSON.parse(event.data);
-      updateNotificationBadges(payload.unread ?? 0);
-    } catch (error) {
-      console.warn('Could not parse notification update.', error);
-    }
-  });
-  source.onerror = () => {
-    console.warn('Notification stream disconnected; browser will retry automatically.');
-  };
-}
-
 const themeToggle = document.querySelector('[data-theme-toggle]');
 
 function setTheme(theme) {
