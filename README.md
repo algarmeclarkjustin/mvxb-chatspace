@@ -12,7 +12,7 @@ A PHP MVC mini social network for the Web Systems and Technologies final project
 
 1. Place this folder at `C:\xampp\htdocs\mini-social`.
 2. Start Apache and MySQL from the XAMPP Control Panel.
-3. In phpMyAdmin, create a database named `mvxb_db`, select it, then import `sql/mvxb_db.sql`. The SQL file does not create or select databases; the active database must be selected before importing. Hosting providers such as InfinityFree require creating databases through their control panel.
+3. In phpMyAdmin, open the database server and import `sql/mvxb_db.sql`. The SQL file now creates and selects the `mvxb_db` database automatically, so you do not need to create it first. Hosting providers such as InfinityFree may still require creating the database through their control panel before import.
 4. Visit `http://localhost/mini-social/`.
 
 The default local database connection is host `127.0.0.1`, database `mvxb_db`, user `root`, and an empty password. On InfinityFree, use the MySQL host, database name, username, and password shown in the hosting control panel. Set `DB_HOST`, `DB_NAME`, `DB_USER`, and `DB_PASS` environment variables to override the local defaults.

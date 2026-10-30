@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="public/assets/app.css">
 </head>
-<body class="<?= in_array($currentPage, ['login', 'register'], true) ? 'auth-body' : '' ?>">
+<body class="<?= in_array($currentPage, ['login', 'register'], true) ? 'auth-body' : '' ?>" data-notification-stream="<?= e($viewer ? url(['page' => 'notification-stream']) : '') ?>">
 <header class="topbar">
     <a class="brand" href="<?= e(url(['page' => $viewer ? 'feed' : 'login'])) ?>" aria-label="<?= e($siteName) ?> home">
         <span class="brand-mark" aria-hidden="true"><?php if ($siteLogo !== ''): ?><img src="public/uploads/<?= e($siteLogo) ?>" alt=""><?php else: ?><i class="bi bi-chat-heart-fill"></i><?php endif; ?></span>

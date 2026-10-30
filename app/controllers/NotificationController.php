@@ -25,6 +25,32 @@ final class NotificationController
         ]);
     }
 
+    public function stream(): void
+    {
+        $user = require_auth();
+
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        header('X-Accel-Buffering: no');
+        header('Connection: keep-alive');
+
+        set_time_limit(0);
+        ignore_user_abort(true);
+
+        echo "retry: 2000\n\n";
+        flush();
+
+        while (!connection_aborted()) {
+            $count = $this->notifications->unreadCount((int) $user['id']);
+            echo "event: notification\n";
+            echo 'data: ' . json_encode(['unread' => $count], JSON_THROW_ON_ERROR) . "\n\n";
+            flush();
+            sleep(3);
+        }
+    }
+
     public function dismiss(): void
     {
         $user = require_auth();
