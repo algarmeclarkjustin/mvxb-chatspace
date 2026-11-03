@@ -11,12 +11,12 @@ foreach ($notifications as $notification) {
         <a class="rail-link" href="<?= e(url(['page' => 'feed'])) ?>"><i class="bi bi-house-door"></i> The feed</a>
         <a class="rail-link" href="<?= e(url(['page' => 'search-users'])) ?>"><i class="bi bi-people"></i> Find people</a>
         <a class="rail-link" href="<?= e(url(['page' => 'favorites'])) ?>"><i class="bi bi-bookmark-heart"></i> Favorites</a>
-        <a class="rail-link rail-notifications active" href="<?= e(url(['page' => 'notifications'])) ?>"><i class="bi bi-bell"></i> Notifications<?php if ($unreadNotificationCount > 0): ?><span class="notification-badge" data-notification-badge><?= (int) $unreadNotificationCount ?></span><?php else: ?><span class="notification-badge" data-notification-badge hidden>0</span><?php endif; ?></a>
+        <a class="rail-link rail-notifications active" href="<?= e(url(['page' => 'notifications'])) ?>"><i class="bi bi-bell"></i> Notifications<?php if ($unreadNotificationCount > 0): ?><span class="notification-badge"><?= (int) $unreadNotificationCount ?></span><?php endif; ?></a>
     </aside>
     <section class="notifications-page">
         <div class="section-heading">
             <div><span class="eyebrow">A little heads-up</span><h1>Notifications</h1></div>
-            <span class="notification-total" data-notification-total><?= (int) $unreadNotificationCount ?> unread</span>
+            <span class="notification-total"><?= (int) $unreadNotificationCount ?> unread</span>
         </div>
         <nav class="notification-tabs" aria-label="Filter notifications">
             <a class="<?= $notificationFilter === 'all' ? 'active' : '' ?>" href="<?= e(url(['page' => 'notifications', 'filter' => 'all'])) ?>">All</a>
